@@ -6,12 +6,12 @@ const router = Router();
 
 router.post("/register", registerUser)
 
-router.route("/login").post(loginUser);
+router.post("/login", loginUser)
 
 // secured routes - meaning we verify JWT before allowing access to the routes api calls
 
-router.route("/logout").post(verifyJWT, logoutUser)
-router.route("/refresh-token").post(refreshAccessToken)
-router.route("/currentuser").get(verifyJWT, getCurrentUser)
+router.post("/logout", verifyJWT, logoutUser)
+router.post("/refresh-token", refreshAccessToken)
+router.get("/currentuser", verifyJWT, getCurrentUser)
 
 export default router;

@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import { Client } from "../models/Client.models.js";
 import { User } from "../models/User.models.js";
 import { Gig } from "../models/Gig.models.js";
+import { Freelancer } from "../models/Freelancer.models.js";
 import { generateAccessAndRefereshTokens } from "./user.controller.js";
 
 const registerClient = asyncHandler(async (req, res) => {
@@ -89,30 +90,92 @@ const postGig = asyncHandler(async (req, res, next) => {
 });
 
 
-const postedGigsbyClient = asyncHandler(async (req, res) => {
-  if(!req.user){
-    throw new ApiError(400, "No user added in req")
-  }
-  const client = await Client.findOne({userId: req.user._id})
+const postedGigsByClient = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const client = await Client.findOne({ userId });
 
   if (!client) {
-    throw new ApiError(404, "Client profile not found");
+    throw new ApiError(404, "Client not found");
   }
 
-  const postedGigs = await Gig.find({postedBy: client}).lean()
+  // Populate applicants with freelancer (User) details
+  const postedGigs = await Gig.find({ postedBy: client._id })
+    .populate({
+      path: "applicants.freelancerId",
+      model: "User", // Explicitly specify the model
+      select: "name email skills"
+    })
+    .populate({
+      path: "hiredFreelancer",
+      model: "User", // Explicitly specify the model
+      select: "name email skills"
+    })
+    .lean();
 
-  res.status(200).json(
-    {
-      success: true,
-      message: "Gigs retrived successfully",
-      postedGigs
-    }
-  )
+  res.status(200).json({
+    success: true,
+    postedGigs,
+  });
+});
 
-})
- 
+// const gigApplicants = asyncHandler(async (req, res) => {
+//   const gigId = req.gigId
+//   const gig = await Gig.findById(gigId).populate('applicants.freelancerId', 'name email skills');
+
+//   if (!gig) {
+//     throw new ApiError(404, "Gig not found");
+//   }
+//   res.status(200).json({
+//     success: true,
+//     message: "Gig applicants retrieved successfully",
+//     applicants: gig.applicants,
+//   });
+// });
+
+const hireFreelancer = asyncHandler(async (req, res) => {
+  const { gigId, freelancerId } = req.body;
+
+  const gig = await Gig.findById(gigId);
+  if (!gig) {
+      throw new ApiError(404, "Gig not found");
+  }
+  
+  gig.hiredFreelancer = freelancerId;
+  await gig.save();
+
+  const client = await Client.findOne({ userId: req.user._id });
+  if (!client) {
+      throw new ApiError(404, "Client profile not found for the user");
+  }
+  if (gig.postedBy.toString() !== client._id.toString()) {
+      throw new ApiError(403, "You are not authorized to hire for this gig");
+  }
+
+  // Check if freelancer has applied to the gig
+  const applicant = gig.applicants.find(app => app.freelancerId.toString() === freelancerId);
+  if (!applicant) {
+      throw new ApiError(400, "Freelancer has not applied to this gig");
+  }
+
+  client.hiredFreelancers.push(freelancerId);
+  await client.save();
+
+  const freelancer = await Freelancer.findOne({ userId: freelancerId });
+  if (!freelancer) {
+      throw new ApiError(404, "Freelancer profile not found");
+  }
+
+  freelancer.currentlyWorkingOn.push(gig);
+  await freelancer.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Freelancer hired successfully",
+  });
+});
 
 export { registerClient,
          postGig,
-         postedGigsbyClient
+         postedGigsByClient,     
+         hireFreelancer    
         };

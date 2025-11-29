@@ -26,8 +26,8 @@ import freelancerRouter from './routes/freelancer.routes.js';
 import clientRouter from './routes/client.routes.js';
 
 app.use('/api/v1/users', userRegisterRouter)
-app.use('/api/v1/users', freelancerRouter)
-app.use('/api/v1/users', clientRouter)
+app.use('/api/v1/freelancer', freelancerRouter)
+app.use('/api/v1/client', clientRouter)
 
 
 export {app};

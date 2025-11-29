@@ -2,19 +2,22 @@ import { useNavigate } from "react-router-dom";
 import { loginUser } from "../api/loginUser.js";
 
 export default function LoginPage() {
-    const navigate = useNavigate();
-    function handleSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
+  const navigate = useNavigate();
 
-        try {
-            loginUser(data);
-            navigate('/dashboard');            
-        } catch (error) {
-            console.error('Login failed:', error);
-        }
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const resdata = await loginUser(data);               
+      console.log("Login successful:", resdata);
+      navigate('/dashboard', { state: { isloggedIn: true, resdata }});
+    } catch (error) {
+      console.error('Login failed:', error);
+      // show UI error
     }
+  }
 
 
   return (

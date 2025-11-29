@@ -31,9 +31,11 @@ export default function FreelancerRegisterPage() {
 
     console.log("Submitting:", payload);
     const result = await registerUserAsFreelancer(payload);
+    
+    console.log("Freelancer registration result:", result); 
 
     if (result.success) {
-        navigate('/dashboard');
+      navigate('/dashboard');      
     }else{
         console.error("Freelancer registration or navigation failed.");
     }

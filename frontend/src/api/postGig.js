@@ -1,6 +1,8 @@
+import { API_BASE } from "./config.js";
+
 export async function postGig(data) {
     try{
-        const res = await fetch('http://localhost:3000/api/v1/users/client/post-gig', {
+        const res = await fetch(`${API_BASE}/client/post-gig`, {
             method: 'POST',
             credentials: 'include' ,
             headers: { 

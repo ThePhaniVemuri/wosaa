@@ -1,6 +1,8 @@
+import { API_BASE } from "./config.js";
+
 export async function logoutUser() {
   try {
-    const res = await fetch('http://localhost:3000/api/v1/users/logout', {
+    const res = await fetch(`${API_BASE}/users/logout`, {
       method: 'POST',
       credentials: 'include', // this sends cookies
     });

@@ -4,12 +4,13 @@ import ApiError from "../utils/ApiError.js";
 import jwt from "jsonwebtoken"
 
 
-const generateAccessAndRefereshTokens = async(userId) =>{
+const generateAccessAndRefereshTokens = async (userId) => {
     try {
         const user = await User.findById(userId)
+        console.log("Generating tokens for user ID:", userId)
         // console.log("Generating tokens for user:", user.email)
 
-        if(!user){
+        if (!user) {
             throw new ApiError(404, "User not found while generating tokens")
         }
 
@@ -21,7 +22,7 @@ const generateAccessAndRefereshTokens = async(userId) =>{
         user.refreshToken = refreshToken
         await user.save({ validateBeforeSave: false })
 
-        return {accessToken, refreshToken}
+        return { accessToken, refreshToken }
 
 
     } catch (error) {
@@ -32,22 +33,25 @@ const generateAccessAndRefereshTokens = async(userId) =>{
 
 const registerUser = asyncHandler(async (req, res) => {
     // Extract user details from request body
-    // check not empty fields
-    // check what is the role
-    // if role is freelancer, redirect to register/freelancer
-    // if role is client, redirect to register/client
+    const { name, email: rawEmail, password, role } = req.body
+    const email = req.body.email.trim().toLowerCase();
 
-    const { name, email, password, role } = req.body
     console.log("Registering user mail:", { email })
 
     if (
-        [name, email, password, role].some((field) => field?.trim() === "") //.some() checks for at least one true condition
+        [name, email, password, role].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
 
     if (!["client", "freelancer"].includes(role)) {
         throw new ApiError(400, "Role must be either client or freelancer")
+    }
+
+    const existedUser = await User.findOne({ email })
+
+    if (existedUser) {
+        throw new ApiError(409, "User with email already exists")
     }
 
     // Create the user
@@ -57,17 +61,17 @@ const registerUser = asyncHandler(async (req, res) => {
         "-password -refreshToken"
     )
 
-    console.log("User registered:", createdUser.email)
-
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user")
-    }
+    }    
 
-    res.status(201).json({
-        success: true,
-        message: "User registered successfully",
-        user: createdUser,
-    })
+
+    res.status(201)        
+        .json({
+            success: true,
+            message: "User registered successfully",
+            user: createdUser,            
+        })
 
 })
 
@@ -78,54 +82,57 @@ const loginUser = asyncHandler(async (req, res) => {
     // generate access and refresh token
     // send cookie and response
 
-    const { email, password } = req.body
+    const { email: rawEmail, password } = req.body
+    const email = (rawEmail || "").trim().toLowerCase();
+    console.log("Logging in user mail:", { email })
 
-    if(!email || !password){
+    if (!email || !password) {
         throw new ApiError(400, "Both fields are important")
     }
 
-    const user = await User.findOne({email})
+    const user = await User.findOne({ email }).select("+password")
 
-    if(!user){
+    if (!user) {
         throw new ApiError(400, "User doesnot exist with this mail")
     }
 
+    console.log(password)
+
     const isPasswordValid = await user.isPasswordCorrect(password)
 
-    if(!isPasswordValid){
+    if (!isPasswordValid) {
         throw new ApiError(400, "Invalid credentials")
     }
 
-    const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
 
     const loggedInUser = await User.findById(user._id).select(
         "-password -refreshToken"
-    )   
+    )
 
     res.
-    status(200).
-    cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-    })
-    .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-    })
-    .json({
-        success: true,
-        message: "User logged in successfully",
-        user: loggedInUser,
-        accessToken,
-        refreshToken
-    })
+        status(200).
+        cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+        })
+        .cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+        })
+        .json({
+            success: true,
+            message: "User logged in successfully",
+            user: loggedInUser,
+            accessToken,
+            refreshToken
+        })
 
 })
 
-
-const logoutUser = asyncHandler(async(req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -145,22 +152,25 @@ const logoutUser = asyncHandler(async(req, res) => {
     }
 
     return res
-    .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
-    .json(200, {}, "User logged Out")
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json({
+            success: true,
+            message: "User logged out"
+        })
 })
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password -refreshToken");
-  res.status(200).json({
-    success: true,
-    user,
-  });
+    const user = await User.findById(req.user._id).select("-password -refreshToken");
+    res.status(200).json({
+        success: true,
+        user,
+    });
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingRefreshToken = req.cookies.refreshToken ;
+    const incomingRefreshToken = req.cookies.refreshToken;
 
     if (!incomingRefreshToken) {
         throw new ApiError(401, "unauthorized request")
@@ -171,39 +181,37 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET
         )
-    
+
         const user = await User.findById(decodedToken?._id)
-    
+
         if (!user) {
             throw new ApiError(401, "Invalid refresh token")
         }
-    
+
         if (incomingRefreshToken !== user?.refreshToken) {
             throw new ApiError(401, "Refresh token is expired or used")
-            
+
         }
-    
+
         const options = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax"
         }
-        
+
         // ->generating new tokens
-        const {accessToken, refreshToken: newRefreshToken} = await generateAccessAndRefereshTokens(user._id)
-    
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefereshTokens(user._id)
+
         return res
-        .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", newRefreshToken, options)
-        .json(
-            {
-                success: true,
-                message: "Access token refreshed",
-                accessToken,
-                refreshToken: newRefreshToken,
-            }
-        )
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json(
+                {
+                    success: true,
+                    message: "Access token refreshed"                    
+                }
+            )
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
@@ -211,10 +219,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 })
 
 
-export { registerUser,
-         loginUser,       
-         generateAccessAndRefereshTokens,
-         logoutUser,
-         getCurrentUser,
-         refreshAccessToken
- };
+export {
+    registerUser,
+    loginUser,
+    generateAccessAndRefereshTokens,
+    logoutUser,
+    getCurrentUser,
+    refreshAccessToken
+};

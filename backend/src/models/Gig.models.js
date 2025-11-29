@@ -7,6 +7,21 @@ const GigSchema = new mongoose.Schema(
         ref: "Client",
         required: true,
     },
+    applicants: {   
+        type: [
+            {
+                freelancerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Changed from "Freelancer" to "User"
+                appliedAt: { type: Date, default: Date.now },
+                status: { type: String, enum: ['applied', 'accepted', 'rejected'], default: 'applied' }   
+            }
+        ],       
+        default: []
+    },
+    hiredFreelancer: {   
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "User", // Changed from "Freelancer" to "User"
+        default: null,
+    },
     title: {
         type: String,
         required: true,
@@ -41,7 +56,7 @@ const GigSchema = new mongoose.Schema(
         validate: [arrayLimit, '{PATH} exceeds the limit of 20'],
     },
     attachments: {
-        type: [String], // Array of file URLs
+        type: [String],
         default: [],
     },
   },

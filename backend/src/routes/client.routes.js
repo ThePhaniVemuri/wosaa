@@ -1,13 +1,26 @@
 import { Router } from "express";
-import {verifyJWT} from "../middleware/auth.middleware.js"
-import { registerClient } from "../controllers/client.controller.js";
-import { postGig } from "../controllers/client.controller.js";
-import { postedGigsbyClient } from "../controllers/client.controller.js";
+import { registerClient, postGig, postedGigsByClient, hireFreelancer } from "../controllers/client.controller.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.post("/register/client", registerClient);
-router.post("/client/post-gig", verifyJWT, postGig);
-router.get("/client/postedgigs", verifyJWT, postedGigsbyClient);
+// Public
+router.post("/register", registerClient);
+
+// Protected
+router.get("/me", verifyJWT, async (req, res, next) => {
+  try {
+    const user = req.user;
+    res.json({ success: true, user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/post-gig", verifyJWT, postGig);
+router.get("/posted-gigs", verifyJWT, postedGigsByClient);
+router.post("/hire-freelancer", verifyJWT, hireFreelancer);
+
+// you can add more client routes here (hire, view applicants, etc.)
 
 export default router;

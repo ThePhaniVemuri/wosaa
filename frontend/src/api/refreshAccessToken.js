@@ -1,32 +1,38 @@
 const API_BASE = "http://localhost:3000/api/v1";
 
 export async function fetchWithRefresh(url, options = {}) {
-  options.credentials = "include"; 
+  options = { ...options, credentials: "include" }; // include cookies now no matter what
+  const savedBody = options.body;
+  const fullUrl = `${API_BASE}${url}`;
 
-  console.log("Making request to:", `${API_BASE}${url}`);
-  let response = await fetch(`${API_BASE}${url}`, options);
+  console.log("Making request to:", fullUrl);
 
-  // token expired or unauthorized
+  let response = await fetch(fullUrl, options);
+
+  // Only retry on 401 (unauthorized)
   if (response.status === 401) {
-    console.log("Access token expired. Trying to refresh...");
+    console.log("Access token expired. Attempting refresh...");
 
     try {
-        const refreshRes = await fetch(`${API_BASE}/users/refresh-token`, {
-            method: "POST",
-            credentials: "include", // include cookies
-            })
+      const refreshRes = await fetch(`${API_BASE}/users/refresh-token`, {
+        method: "POST",
+        credentials: "include",
+      });
 
-        if (refreshRes.ok) {
-            console.log("Token refreshed! Retrying original request...");
-            response = await fetch(`${API_BASE}${url}`, options);
-            } else {
-            console.log("Refresh failed. Redirecting to login...");
-            return;
-        }
-    } 
-    catch (error) {
-      console.error("Error during token refresh:", error);
-      return;
+      // If refresh fails, don't retry — let caller handle redirect to login
+      if (!refreshRes.ok) {
+        console.error(`Refresh failed: ${refreshRes.status}`);
+        throw new Error(`Refresh failed: ${refreshRes.status}`);
+      }
+
+      console.log("Token refreshed successfully");
+
+      // Retry original request with fresh token
+      options.body = savedBody;
+      response = await fetch(fullUrl, options);
+    } catch (err) {
+      console.error("Token refresh error:", err);
+      throw err;
     }
   }
 

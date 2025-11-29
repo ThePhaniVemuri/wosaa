@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const FreelancerSchema = new mongoose.Schema({
     userId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: "User" 
+        ref: "User",
+        required: true
     },
     bio: String,
     skills: [String],

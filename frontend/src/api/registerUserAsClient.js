@@ -1,3 +1,5 @@
+import { API_BASE } from "./config.js";
+
 export async function registerUserAsClient(data) {
 
     // parse stored user object 
@@ -15,17 +17,15 @@ export async function registerUserAsClient(data) {
     console.log("Registering user as client with data:", {user, ...data});
 
     try{
-        const res = await fetch('http://localhost:3000/api/v1/users/register/client', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json' 
-            },
-            credentials: 'include',
-            body: JSON.stringify({user, ...data})
-        })
+        const res = await fetch(`${API_BASE}/client/register`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({user, ...data}),
+        });
 
-        const resdata = await res.json();
-        return resdata;
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
     }    
     catch(error) {
         console.error("Error registering user as client:", error);
