@@ -129,7 +129,7 @@ const gigsInWork = asyncHandler(async (req, res) => {
     populate: {
       path: "postedBy",
       model: "Client",
-      select: "name company country"
+      select: "userId name company country"
     }
   })
 

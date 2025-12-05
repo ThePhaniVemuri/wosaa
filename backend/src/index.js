@@ -1,21 +1,30 @@
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 import connectDB from "./db/index.js";
-import {app} from './app.js'
+import { app } from "./app.js";
+import startChatServer from "./chat/chatServer.js";
+import http from "http";
 
-dotenv.config({
-    path: './.env'
-})
+dotenv.config();
 
-connectDB()
-.then(() => {
-    app.listen(process.env.PORT || 8000, () => {
-        console.log(`⚙️ Server is running at port : ${process.env.PORT}`);
-    })
-})
-.catch((err) => {
-    console.log("MONGO db connection failed !!! ", err);
-})
+async function startServer() {
+  try {
+    await connectDB();
 
-app.get('/', (req, res) => {
-    res.send("API is working")
-})
+    // Create HTTP server for both Express + Socket.io
+    const httpServer = http.createServer(app);
+
+    // Attach socket.io to httpServer
+    startChatServer(httpServer);
+    console.log("✅ Chat server started.");
+
+    // Start listening
+    httpServer.listen(process.env.PORT, () => {
+      console.log(`🚀 Server + Socket running on port ${process.env.PORT}`);
+    });
+
+  } catch (error) {
+    console.error("DB Connection Failed:", error);
+  }
+}
+
+startServer();

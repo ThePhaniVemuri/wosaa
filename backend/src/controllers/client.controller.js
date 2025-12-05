@@ -108,7 +108,7 @@ const postedGigsByClient = asyncHandler(async (req, res) => {
     .populate({
       path: "hiredFreelancer",
       model: "User", // Explicitly specify the model
-      select: "name email skills"
+      select: "_id name email skills"
     })
     .lean();
 

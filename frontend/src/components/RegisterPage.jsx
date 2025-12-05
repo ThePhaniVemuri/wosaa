@@ -13,7 +13,7 @@ export default function RegisterPage() {
         try {
             await registerUser(data); 
             if (data.role === 'freelancer') {
-                navigate('/register/freelancer');
+                navigate('/register/freelancer')
             }
             else if (data.role === 'client') {
                 navigate('/register/client');

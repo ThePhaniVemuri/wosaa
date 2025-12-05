@@ -5,6 +5,7 @@ import { applyToGig } from "../api/applyToGig.js";
 import { hireFreelancer } from "../api/hireFreelancer.js";
 import { getGigsInWork } from "../api/getgigsInWork.js";
 import { API_BASE } from "../api/config.js";
+import enableClientSocketConnection from "../services/socket.js";
 
 export function Dashboard() {
   const [user, setUser] = useState(null);
@@ -139,6 +140,24 @@ export function Dashboard() {
     }
   };
 
+  // handle chat button click
+  const handleChatButtonClick = (clientId, freelancerId, gigId, gigTitle) => {    
+
+    if (!clientId || !freelancerId || !gigId) {
+      console.warn("Cannot initiate chat: missing IDs");
+      console.log({ clientId, freelancerId, gigId });
+      return;
+    }
+
+    if (user.role === "client"){
+      navigate("/chat/client", { state: { clientId, freelancerId, gigId, gigTitle } });          
+    }
+    
+    if (user.role === "freelancer"){
+      navigate("/chat", { state: { clientId, freelancerId, gigId, gigTitle } });    
+    }    
+  }
+
   useEffect(() => {
     const getgigInWork = async () => {
       try {
@@ -206,6 +225,12 @@ export function Dashboard() {
                     {gig.hiredFreelancer ? (
                       <li className="text-green-400 text-sm italic">
                         Freelancer hired – {gig.hiredFreelancer.name} ({gig.hiredFreelancer.email})
+                        <button
+                          className="ml-4 px-2 py-1 bg-gray-600 text-white rounded-lg text-xs cursor-not-allowed"
+                          onClick={() => handleChatButtonClick(user._id, gig.hiredFreelancer._id, gig._id, gig.title)}
+                        >
+                          Chat with Freelancer
+                        </button>
                       </li>
                     ) : (
                       <>
@@ -268,6 +293,13 @@ export function Dashboard() {
                       <span className="block text-gray-400 text-sm mt-1">
                         Budget: ({gig.budget}$)
                       </span>
+
+                      <button 
+                        className="mt-3 px-3 py-1 bg-green-600 text-white rounded-lg text-sm cursor-not-allowed"
+                        onClick={() => handleChatButtonClick(gig.postedBy?.userId, user._id, gig._id, gig.title)}                             
+                      >
+                        Chat with Client                      
+                      </button>                      
                     </li>
                   ))}
                 </ul>

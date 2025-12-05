@@ -13,6 +13,8 @@ import LoginPage from './components/LoginPage.jsx'
 import ClientRegisterPage from './components/ClientRegisterPage.jsx'
 import { Dashboard } from './components/Dashboard.jsx'
 import PostGig from './components/PostGig.jsx'
+import Chat from './components/Chat.jsx'
+import ClientChat from './components/ClientChat.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -24,6 +26,8 @@ const router = createBrowserRouter(
       <Route path='/login' element={<LoginPage />} />
       <Route path='/dashboard' element={<Dashboard />} />
       <Route path='/client/post-gig' element={<PostGig />} />
+      <Route path='chat' element={<Chat />} />
+      <Route path='chat/client' element={<ClientChat />} />
     </Route>
   )
 )

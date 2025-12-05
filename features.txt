@@ -1,0 +1,41 @@
+1. JWT Auth (fixed + polished)
+Access + Refresh token system
+Auto refresh flow on frontend
+Logout route clears refresh token from DB
+Role-based auth: client, freelancer, admin
+
+2. Freelancer & Client Dashboard
+Give BOTH sides a dashboard:
+Freelancer Dashboard
+List of available gigs
+Gig search + filters: price, category, tech stack
+Apply/claim task
+Task history
+Client Dashboard
+Post gig form
+My gigs
+Status: open, in-progress, completed
+Manage payments
+Why: Shows multi-role UI + backend experience.
+
+3. Payments (Stripe / Razorpay)
+For micro-transactions like $0.99–$3.99.
+Client pays → Freelancers get virtual credits
+No need to do real withdrawals (for now)
+Just store “earnings” for each freelancer
+Why: Payments = instant 10x project value.
+
+4. Task Workflow (MOST IMPORTANT)
+Gig lifecycle:
+open → assigned → submitted → approved → completed
+Features:
+Freelancer marks task “submitted”
+Client reviews & approves
+Auto credit money to freelancer Wallet
+Simple chat under each task
+Why: Interviewers LOVE workflow + state machines.
+
+5. Real-Time Notifications (Socket.io)
+Examples:
+“Your task was approved!”
+“New gig posted: React bug fixing”

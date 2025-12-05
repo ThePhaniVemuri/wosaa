@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { loginUser, logoutUser, registerUser, getCurrentUser, refreshAccessToken } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
+import { chatRoomLogic } from "../controllers/chat.controller.js";
 
 const router = Router();
 
@@ -13,5 +14,7 @@ router.post("/login", loginUser)
 router.post("/logout", verifyJWT, logoutUser)
 router.post("/refresh-token", refreshAccessToken)
 router.get("/currentuser", verifyJWT, getCurrentUser)
+
+router.post("/get-or-create-chat-room", verifyJWT, chatRoomLogic)
 
 export default router;

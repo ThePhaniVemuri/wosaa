@@ -11,6 +11,7 @@ const showGigs = asyncHandler(async (req, res) => {
         model: "User", 
         select: "name email skills"
     })
+    .populate("hiredFreelancer", "userId name email skills")     
     .lean();    
 
     if(!gigs){
