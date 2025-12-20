@@ -12,7 +12,9 @@ const GigSchema = new mongoose.Schema(
             {
                 freelancerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Changed from "Freelancer" to "User"
                 appliedAt: { type: Date, default: Date.now },
-                status: { type: String, enum: ['applied', 'accepted', 'rejected'], default: 'applied' }   
+                status: { type: String, enum: ['applied', 'accepted', 'rejected'], default: 'applied' },
+                bidAmount : { type: Number},
+                note: { type: String }
             }
         ],       
         default: []
@@ -37,7 +39,7 @@ const GigSchema = new mongoose.Schema(
     category: {
         type: String,
         required: true,
-        enum: ["SaaS Developement", "Vibe Coding", "UI/UX Design", "Digital Marketing"],
+        enum: ["SaaS Development", "Vibe Coding", "UI/UX Design", "Digital Marketing"],
         trim: true,
     },
     budget: {
@@ -58,6 +60,11 @@ const GigSchema = new mongoose.Schema(
     attachments: {
         type: [String],
         default: [],
+    },
+    status: {
+        type: String,
+        enum: ["open", "closed", "in_progress", "completed"],
+        default: "open",
     },
   },
   { timestamps: true }

@@ -5,7 +5,6 @@ import { applyToGig } from "../api/applyToGig.js";
 import { hireFreelancer } from "../api/hireFreelancer.js";
 import { getGigsInWork } from "../api/getgigsInWork.js";
 import { API_BASE } from "../api/config.js";
-import enableClientSocketConnection from "../services/socket.js";
 
 export function Dashboard() {
   const [user, setUser] = useState(null);
@@ -15,14 +14,24 @@ export function Dashboard() {
   const [gigsInWork, setGigsInWork] = useState([]);
   const navigate = useNavigate();
 
+  // bid for gig variables
+  const [openGigId, setOpenGigId] = useState(null);
+  const [bidAmount, setBidAmount] = useState("");
+  const [note, setNote] = useState("");
+
+  //hire freelancer confirmation variables
+  const [showHireModal, setShowHireModal] = useState(false);
+  const [selectedGigId, setSelectedGigId] = useState(null);
+  const [selectedFreelancerId, setSelectedFreelancerId] = useState(null);
+  const [selectedFreelancerName, setSelectedFreelancerName] = useState("");
+  const [applicantBidAmount, setApplicantBidAmount] = useState(null);
+
+  // set status of task
+  const [currentStatus, setCurrentStatus] = useState("");
+  const [taskcompleteConfirmationModel, setTaskcompleteConfirmationModel] = useState(false);
+  const [selectedGigIdForTask, setSelectedGigIdForTask] = useState(null);
+
   const location = useLocation();
-  // const userAfterAutoLogin = location.state?.user || null;
-  // console.log("User whoafter registration from location state:", userAfterAutoLogin);
-  // useEffect(() => {
-  //   if (userAfterAutoLogin) {
-  //     setUser(userAfterAutoLogin);
-  //   }
-  // }, [userAfterAutoLogin]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -93,11 +102,12 @@ export function Dashboard() {
     }
   }, [user]);
 
-  const applyToGigg = async (gigId) => {
+  const applyToGigg = async (gigId, bidAmount, note) => {
     if (isApplying) return; // Prevent multiple submissions
     setIsApplying(true);
     try {
-      const data = await applyToGig(gigId);
+      console.log("Applying to gig:", gigId, "with bid:", bidAmount, "and note:", note);
+      const data = await applyToGig(gigId, bidAmount, note);
       console.log("Applied to gig response:", data);
       if (data?.success) {
         console.log("Successfully applied to gig");
@@ -125,20 +135,51 @@ export function Dashboard() {
   };
 
   // make hire handler an async function (not a function factory)
-  const hireFreelancerr = async (gigId, freelancerId) => {
+  const hireFreelancerr = async (clientId, gigId, freelancerId, amount) => {
     if (!freelancerId) {
       console.warn("Cannot hire: freelancerId missing");
       return;
     }
 
     try {
-      await hireFreelancer(gigId, freelancerId);
+      await hireFreelancer(clientId, gigId, freelancerId, amount);
       // refresh UI to reflect hire
       await fetchPostedGigs();
     } catch (error) {
       console.error("Error hiring freelancer from Dashboard:", error);
     }
   };
+
+  const handleHire = async (clientId, gigId, freelancerId, amount) => {
+    console.log("Initiating hire process for freelancer:", freelancerId, "on gig:", gigId, "with amount:", amount);
+    if (!freelancerId) {
+      console.warn("Cannot hire: freelancerId missing");
+      return;
+    }
+
+    try {
+      // this creates contract 
+      const contractRes = await fetch(`${API_BASE}/client/create-contract`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId, gigId, freelancerId, amount }),
+        credentials: "include",
+      });
+      if (!contractRes.ok) {
+        const errorText = await contractRes.text();
+        console.error("Failed to create contract:", errorText);
+        return;
+      }
+      const contractData = await contractRes.json();
+      console.log("Contract created:", contractData);
+      
+      // Navigate to Payment Page
+      navigate(`/pay/${contractData.contract._id}`, { state: { contract: contractData.contract } });
+    } catch (error) {
+      console.error("Error in handleHire:", error);
+    }
+  };
+  
 
   // handle chat button click
   const handleChatButtonClick = (clientId, freelancerId, gigId, gigTitle) => {    
@@ -187,6 +228,32 @@ export function Dashboard() {
     return String(fidStr) === String(userId);
   };
 
+  const setAndGetGigStatus = async (gigId, status) => {
+    try {
+      const res = await fetch(`${API_BASE}/client/set-gig-status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },        
+        body: JSON.stringify({ gigId, status }),
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      console.log("Set gig status response:", data);
+
+      const currentStatus = data.updatedGig.status;
+      setCurrentStatus(currentStatus);
+
+      if (res.ok) {        
+        console.log("Gig status updated successfully");
+      } else {
+        const errorText = await res.text();
+        console.error("Failed to update gig status:", errorText);
+      }
+    } catch (err) {
+      console.error("Error updating gig status:", err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neutral-950 text-gray-100 font-serif p-8">
       {/* Font and styles */}
@@ -203,12 +270,12 @@ export function Dashboard() {
 
         {user ? (
           <div className="bg-neutral-900 p-6 rounded-2xl shadow-lg border border-neutral-800">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-200">User Information</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-200">Your Information</h2>
             <p className="text-gray-400">Name: <span className="text-gray-100">{user.name}</span></p>
             <p className="text-gray-400">Email: <span className="text-gray-100">{user.email}</span></p>
           </div>
         ) : (
-          <p className="text-center text-gray-400 animate-pulse">Loading user data...</p>
+          <p className="text-center text-gray-400 animate-pulse">Please Login</p>
         )}
 
         {/* Client Dashboard */}
@@ -226,11 +293,40 @@ export function Dashboard() {
                       <li className="text-green-400 text-sm italic">
                         Freelancer hired – {gig.hiredFreelancer.name} ({gig.hiredFreelancer.email})
                         <button
-                          className="ml-4 px-2 py-1 bg-gray-600 text-white rounded-lg text-xs cursor-not-allowed"
+                          className="ml-4 px-2 py-1 bg-gray-900! text-white rounded-lg text-xs cursor-not-allowed"
                           onClick={() => handleChatButtonClick(user._id, gig.hiredFreelancer._id, gig._id, gig.title)}
                         >
                           Chat with Freelancer
                         </button>
+                        <div>
+                        Current Status of Gig: <span className="font-semibold text-blue-400">{gig.status}</span>                                                
+                      </div>
+                      {/* set the status of task */}                      
+                      <div className="items-center mt-4">
+                        <h4 className="text-sm font-semibold text-gray-200">
+                          set task status
+                        </h4>
+
+                        <select
+                          value={ gig.status || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+
+                            if (value === "completed") {
+                              setSelectedGigIdForTask(gig._id);
+                              setTaskcompleteConfirmationModel(true);
+                            } else {
+                              setAndGetGigStatus(gig._id, value);
+                            }
+                          }}
+                          className="mt-2 w-48 bg-neutral-800 text-gray-200 border border-neutral-700 rounded-md px-3 py-2"
+                        >
+                          <option value="in_progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                          <option value="closed">Closed</option>
+                        </select>
+                      </div>
+                                               
                       </li>
                     ) : (
                       <>
@@ -239,13 +335,20 @@ export function Dashboard() {
                             <li key={idx} className="text-gray-400 text-sm">
                               {(applicant.freelancerId?.name) || (applicant.freelancerId) || "Unknown"}
                               {" "}
-                              ({applicant.freelancerId?.email || "—"})
-                              – Skills: {(applicant.freelancerId?.skills || []).join(", ")}
+                              ({applicant.freelancerId?.email || "—"})                              
+                              - Bid: ₹{applicant.bidAmount}
+                              - Note: {applicant.note}
                               {/* render Hire button only when we have a freelancer id/object */}
                               {applicant.freelancerId ? (
                                 <button
-                                  onClick={() => hireFreelancerr(gig._id, applicant.freelancerId?._id || applicant.freelancerId)}
-                                  className="ml-4 px-2 py-1 bg-white text-black rounded-lg text-xs hover:bg-gray-200 transition-all"
+                                  onClick={() => {
+                                    setSelectedGigId(gig._id);
+                                    setSelectedFreelancerId(applicant.freelancerId?._id || applicant.freelancerId);
+                                    setApplicantBidAmount(applicant.bidAmount);
+                                    setSelectedFreelancerName(applicant.freelancerId?.name || "Unknown");
+                                    setShowHireModal(true);
+                                  }}
+                                  className="ml-4 px-2 py-1 bg-gray-900! text-white rounded-lg text-xs hover:bg-gray-700"
                                 >
                                   Hire this freelancer
                                 </button>
@@ -267,6 +370,76 @@ export function Dashboard() {
             <Link to="/client/post-gig" className="inline-block bg-white text-black px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all">
               Post a New Gig
             </Link>
+
+            {/* task completion confiramtion model */}
+            {taskcompleteConfirmationModel && (
+              <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-black rounded-lg shadow-lg p-6 w-96">
+                  <h2 className="text-lg text-white font-semibold mb-4">
+                    Confirm Task Completion
+                  </h2>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Are you sure you want to mark this task as completed? This action will notify the freelancer and update the gig status.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={async () => {
+                        await setAndGetGigStatus(selectedGigIdForTask, "completed");
+                        setTaskcompleteConfirmationModel(false);
+                      }}
+                      className="px-4 py-2 bg-green-400! text-white rounded hover:bg-green-700"
+                    >
+                      ✅ Confirm
+                    </button>
+                    <button
+                      onClick={() => setTaskcompleteConfirmationModel(false)}
+                      className="px-4 py-2 bg-red-600! text-white rounded hover:bg-red-700"
+                    >
+                      ❌ Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}                      
+
+            {/* hire confirmation modal */}
+            {showHireModal && (
+                <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-black rounded-lg shadow-lg p-6 w-96">
+                    <h2 className="text-lg text-white font-semibold mb-4">
+                      You’re hiring {selectedFreelancerName} for this gig
+                    </h2>
+
+                    <h4>Payment Details</h4>
+                    
+                    <h4 className="mt-2 font-semibold">Amount: {applicantBidAmount}</h4>
+
+                    <p className="text-sm text-gray-400 mb-4">
+                      By confirming, you agree to pay the freelancer according to the agreed terms. Please ensure you have reviewed the freelancer's application and are satisfied with their qualifications.
+                    </p>
+
+                    <div className="flex justify-end gap-3">
+                      <button
+                        onClick={async () => {
+                          console.log("Confirming hire of freelancer:", selectedFreelancerId, "for gig:", selectedGigId);
+                          await handleHire(user._id, selectedGigId, selectedFreelancerId, applicantBidAmount);                          
+                        }}
+                        className="px-4 py-2 bg-green-400! text-white rounded hover:bg-green-700"
+                      >
+                        ✅ Confirm Hire
+                      </button>
+                      <button
+                        onClick={() => setShowHireModal(false)}
+                        className="px-4 py-2 bg-red-600! text-white rounded hover:bg-red-700"
+                      >
+                        ❌ Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
           </div>
         ) : (
           user && <div className="text-center text-gray-500 italic" />
@@ -295,7 +468,7 @@ export function Dashboard() {
                       </span>
 
                       <button 
-                        className="mt-3 px-3 py-1 bg-green-600 text-white rounded-lg text-sm cursor-not-allowed"
+                        className="ml-4 px-2 py-1 bg-gray-900! text-white rounded-lg text-xs cursor-not-allowed"
                         onClick={() => handleChatButtonClick(gig.postedBy?.userId, user._id, gig._id, gig.title)}                             
                       >
                         Chat with Client                      
@@ -316,30 +489,81 @@ export function Dashboard() {
           {gigs && gigs.length > 0 ? (
             <ul className="space-y-3">
               {gigs.map((gig) => {
-                const alreadyApplied = gig.applicants?.some(applicant => applicantMatchesUser(applicant, user?._id));
-                return (
-                  <li key={gig._id || gig.id} className="bg-neutral-800 hover:bg-neutral-700 transition-all p-4 rounded-xl text-gray-200">
+                const alreadyApplied = gig.applicants?.some(applicant =>
+                  applicantMatchesUser(applicant, user?._id)
+                );
+
+                return gig.hiredFreelancer ? null : (
+                  <li
+                    key={gig._id || gig.id}
+                    className="bg-neutral-800 hover:bg-neutral-700 transition-all p-4 rounded-xl text-gray-200"
+                  >
                     {gig.title}{" "}
                     {gig.description && (
                       <p className="text-gray-400 text-sm mt-1">{gig.description}</p>
                     )}
                     <span className="text-gray-500 text-sm">
-                      — {gig.postedBy?.name || "Unknown"} from {gig.postedBy?.company || "—"}
-
-                    ({gig.budget}$)
+                      — {gig.postedBy?.name || "Unknown"} from {gig.postedBy?.company || "—"} ({gig.budget}$)
                     </span>
 
                     {alreadyApplied ? (
                       <button
                         disabled
-                        className="ml-4 px-3 py-1 bg-gray-500 text-green-500 rounded-lg text-sm cursor-not-allowed"                        
+                        className="ml-4 px-3 py-1 bg-gray-500 text-green-500 rounded-lg text-sm cursor-not-allowed"
                       >
                         Applied
                       </button>
                     ) : (
-                      <button onClick={() => applyToGigg(gig._id)} className="ml-4 px-3 py-1 bg-white text-black rounded-lg text-sm hover:bg-gray-200 transition-all">
+                      <button
+                        onClick={() => setOpenGigId(gig._id)}
+                        className="ml-4 px-3 py-1 bg-white text-black rounded-lg text-sm hover:bg-gray-200 transition-all"
+                      >
                         Get the gig
                       </button>
+                    )}
+
+                    {openGigId === gig._id && (
+                      <div className="mt-4 bg-neutral-700 p-4 rounded-lg">
+                        <label className="block text-gray-300 text-sm mb-2">
+                          Bid Amount (₹)
+                        </label>
+                        <input
+                          type="number"
+                          value={bidAmount}
+                          onChange={(e) => setBidAmount(e.target.value)}
+                          className="w-full px-3 py-2 rounded-md bg-neutral-800 text-gray-100 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                        />
+
+                        <label className="block text-gray-300 text-sm mb-2">
+                          Why you?
+                        </label>
+                        <textarea
+                          value={note}
+                          onChange={(e) => setNote(e.target.value)}
+                          rows={3}
+                          className="w-full px-3 py-2 rounded-md bg-neutral-800 text-gray-100 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                        />
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              applyToGigg(gig._id, bidAmount, note); 
+                              setOpenGigId(null);
+                              setBidAmount("");
+                              setNote("");
+                            }}
+                            className="px-4 py-2 bg-green-600! text-white rounded hover:bg-green-700"
+                          >
+                            Submit
+                          </button>
+                          <button
+                            onClick={() => setOpenGigId(null)}
+                            className="px-4 py-2 bg-red-600! text-white rounded hover:bg-red-700"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </li>
                 );

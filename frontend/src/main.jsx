@@ -15,9 +15,15 @@ import { Dashboard } from './components/Dashboard.jsx'
 import PostGig from './components/PostGig.jsx'
 import Chat from './components/Chat.jsx'
 import ClientChat from './components/ClientChat.jsx'
+import UserProvider from './context/UserContext.jsx'
+import About from './components/About.jsx'
+import Contact from './components/Contact.jsx'
+import PaymentPage from './components/PaymentPage.jsx'
+import PaymentSuccessPage from './components/PaymentSuccessPage.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
+    <>
     <Route path='/' element={<Layout />}>
       <Route index element={<App />} />
       <Route path='/register' element={<RegisterPage />} />
@@ -27,13 +33,20 @@ const router = createBrowserRouter(
       <Route path='/dashboard' element={<Dashboard />} />
       <Route path='/client/post-gig' element={<PostGig />} />
       <Route path='chat' element={<Chat />} />
-      <Route path='chat/client' element={<ClientChat />} />
+      <Route path='chat/client' element={<ClientChat />} />     
+      <Route path='pay/:contractId' element={<PaymentPage />} />
+      <Route path='/paymentsuccess' element={<PaymentSuccessPage />}/>
+      <Route path='/about' element={<About />} />
+      <Route path='/contact' element={<Contact />} />
     </Route>
+    </>
   )
 )
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
+    <UserProvider>
+      <RouterProvider router={router} />
+    </UserProvider>
+  </StrictMode>
 )

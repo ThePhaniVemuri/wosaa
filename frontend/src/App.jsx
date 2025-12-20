@@ -1,9 +1,20 @@
 import "./App.css";
 import { Outlet, useNavigate } from "react-router-dom";
-import { logoutUser } from "./api/logoutUser.js";
+import { useUser } from "./context/UserContext.jsx";
 
 function App() {
+  const { user } = useUser();
+
   const navigate = useNavigate();
+
+  const handleDashboardNavigate = async () => {
+    if (!user){
+      navigate("/login");
+    }
+    else {
+      navigate("/dashboard");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-neutral-950 text-gray-100 font-serif flex flex-col items-center">
@@ -34,7 +45,7 @@ function App() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={handleDashboardNavigate}
               className="px-8 py-3 rounded-xl bg-white text-black font-medium text-lg hover:bg-gray-200 transition-all"
             >
               Go to Dashboard →

@@ -5,6 +5,9 @@ import { User } from "../models/User.models.js";
 import { Gig } from "../models/Gig.models.js";
 import { Freelancer } from "../models/Freelancer.models.js";
 import { generateAccessAndRefereshTokens } from "./user.controller.js";
+import { Contract } from "../models/Contract.models.js";
+import DodoPayments from 'dodopayments';
+import sendMail from "../utils/email.js"
 
 const registerClient = asyncHandler(async (req, res) => {
   const { user, name, company, country } = req.body;
@@ -174,8 +177,167 @@ const hireFreelancer = asyncHandler(async (req, res) => {
   });
 });
 
-export { registerClient,
-         postGig,
-         postedGigsByClient,     
-         hireFreelancer    
-        };
+const createContract = asyncHandler(async (req, res) => {
+    const {clientId, gigId, freelancerId, amount} = req.body 
+    
+    // check for existing contract
+    const existingContract = await Contract.findOne({gigId: gigId, clientId: clientId, freelancerId: freelancerId})
+    if(existingContract){
+        return res.status(200).json({
+            success:"Contact created successfully",
+            contract: existingContract
+        }) 
+    }
+    else{
+
+    // create contract
+    const contract = await Contract.create({
+        gigId : gigId,
+        clientId: clientId,
+        freelancerId: freelancerId,
+        amount: amount
+    })
+
+    // const createdContract = await Contract.findOne({gigId: gigId})
+
+    res.status(200).json({
+        success:"Contact created successfully",
+        contract: contract
+    })    
+}
+})
+
+const createCheckoutSession = asyncHandler(async (req, res) => {
+  const { amount, currency, metadata } = req.body;
+
+  // Convert dollars to cents
+  const amountInCents = amount * 100;
+
+  const contractId = metadata.contractId;
+  console.log("Creating checkout session for contractId:", contractId);
+
+  const contract = await Contract.findById(contractId);
+  if (!contract) {
+    throw new ApiError(404, "Contract not found");
+  }
+
+  console.log("secret:", process.env.DODO_SECRET_KEY)
+
+  // Initialize the Dodo Payments client
+  const client = new DodoPayments({
+    bearerToken: process.env.DODO_SECRET_KEY,
+    environment: process.env.DODO_ENVIRONMENT
+  });
+
+  try {
+    const session = await client.checkoutSessions.create({
+      product_cart: [
+        {
+          product_id: "pdt_NDYDq6IJxKRR2EL5fho2B",
+          quantity: 1,
+          amount: amountInCents,
+        },
+      ],
+      return_url: process.env.DODO_RETURN_URL,
+      metadata: {
+        contractId,
+        clientId: contract.clientId,
+        freelancerId: contract.freelancerId,
+        gigId: contract.gigId,
+    }
+
+      // Optional: Pre-fill customer information
+      // customer: {
+      //   email: "customer@example.com",
+      //   name: "John Doe",
+      // },
+
+      // Optional: Add metadata for tracking
+      // metadata: {
+      //   order_id: "order_123",
+      //   pricing_tier: "custom",
+      // },
+    });
+
+    console.log("Checkout URL:", session.checkout_url);
+    console.log("Session ID:", session.session_id);
+
+    res.status(200).json({
+      url: session.checkout_url,
+    });
+  } catch (error) {
+    console.error("Failed to create checkout session:", error);
+    throw error;
+  }
+});
+
+
+const setGigStatus = asyncHandler(async (req, res) => {
+    const {gigId, status} = req.body
+
+    const gig = await Gig.findById(gigId)
+    if(!gig){
+        throw new ApiError(500,"Not found gig to set status")        
+    }
+
+    if (status === "completed") {
+        try {
+            // find the contract for this gig (if any)
+            const contract = await Contract.findOne({ gigId: gig._id });
+
+            // get client info (the client who posted the gig)
+            const clientProfile = await Client.findById(gig.postedBy);
+            const clientUser = clientProfile ? await User.findById(clientProfile.userId).select("name email") : null;
+
+            // get freelancer user (gig.hiredFreelancer stores freelancer user id)
+            const freelancerUser = gig.hiredFreelancer
+            ? await User.findById(gig.hiredFreelancer).select("name email")
+            : null;
+
+            // optional: mark contract as completed/ready for release
+            if (contract) {
+            contract.status = "COMPLETED";
+            contract.paymentStatus = "READY_FOR_RELEASE";
+            await contract.save();
+            }
+
+            const subject = `Release funds for completed gig: ${gig.title || gig._id}`;
+            const html = `
+            <p>The gig <strong>${gig.title || 'Untitled'}</strong> has been marked <strong>completed</strong>.</p>
+            <p><strong>Client:</strong> ${clientUser?.name ?? 'N/A'} (${clientUser?.email ?? 'N/A'})</p>
+            <p><strong>Freelancer:</strong> ${freelancerUser?.name ?? 'N/A'} (${freelancerUser?.email ?? 'N/A'})</p>
+            <p><strong>Amount:</strong> ${contract?.amount ?? 'N/A'}</p>
+            <p><strong>Contract ID:</strong> ${contract?._id ?? 'N/A'}</p>
+            <p>Please release the funds to the freelancer.</p>
+            `;
+
+            await sendMail({
+            to: "topetensteff@gmail.com",
+            subject,
+            html,
+            text: `Gig ${gig.title || gig._id} completed — please release funds.`,
+            });
+        } catch (err) {
+            console.error("Error sending release-funds email:", err);
+        }
+    }
+
+    gig.status = status;
+    await gig.save();
+
+    res.status(200).json({
+        success: "Gig status updated",
+        updatedGig: gig               
+    })
+
+})
+
+export {
+    registerClient,
+    postGig,
+    postedGigsByClient,     
+    hireFreelancer,
+    createContract,
+    createCheckoutSession,
+    setGigStatus
+};

@@ -37,7 +37,7 @@ export default function RegisterPage() {
                 name="name"
                 type="text"
                 placeholder=""
-                className="w-full mb-4 px-3 py-2 border border-gray-200 rounded bg-white text-gray-900 focus:outline-none focus:ring-0"
+                className="w-full mb-4 px-3 py-2 border border-gray-200 rounded bg-white text-gray-900 shadow-md focus:outline-none focus:ring-0"
             />
 
             <label className="block text-sm text-gray-700 mb-1">Email</label>
@@ -45,7 +45,7 @@ export default function RegisterPage() {
                 name="email"
                 type="email"
                 placeholder=""
-                className="w-full mb-4 px-3 py-2 border border-gray-200 rounded bg-white text-gray-900 focus:outline-none focus:ring-0"
+                className="w-full mb-4 px-3 py-2 border border-gray-200 rounded bg-white text-gray-900 shadow-md focus:outline-none focus:ring-0"
             />
 
             <label className="block text-sm text-gray-700 mb-1">Password</label>
@@ -53,39 +53,40 @@ export default function RegisterPage() {
                 name="password"
                 type="password"
                 placeholder=""
-                className="w-full mb-4 px-3 py-2 border border-gray-200 rounded bg-white text-gray-900 focus:outline-none focus:ring-0"
+                className="w-full mb-4 px-3 py-2 border border-gray-200 rounded bg-white text-gray-900 shadow-md focus:outline-none focus:ring-0"
             />
 
-            <div className="mb-4">
-                <span className="block text-sm text-gray-700 mb-2">Role</span>
-                <div className="flex gap-3">
-                    <div className="flex-1">
-                        <input id="role-freelancer" name="role" type="radio" value="freelancer" className="sr-only peer" />
-                        <label
-                            htmlFor="role-freelancer"
-                            className="block cursor-pointer w-full text-center px-3 py-2 border border-gray-200 rounded bg-white peer-checked:border-gray-900 peer-checked:shadow-sm"
-                        >
-                            Freelancer
-                        </label>
-                    </div>
-
-                    <div className="flex-1">
-                        <input id="role-client" name="role" type="radio" value="client" className="sr-only peer" />
-                        <label
-                            htmlFor="role-client"
-                            className="block cursor-pointer w-full text-center px-3 py-2 border border-gray-200 rounded bg-white peer-checked:border-gray-900 peer-checked:shadow-sm"
-                        >
-                            Client
-                        </label>
-                    </div>
+            <div className="flex gap-3">
+                <label className="flex-1 cursor-pointer">
+                <input
+                    type="radio"
+                    name="role"
+                    value="freelancer"
+                    className="peer hidden"
+                />
+                <div className="text-center py-2 border border-neutral-700 rounded bg-neutral-800 peer-checked:border-white">
+                    Freelancer
                 </div>
-            </div>
+                </label>
+
+                <label className="flex-1 cursor-pointer">
+                <input
+                    type="radio"
+                    name="role"
+                    value="client"
+                    className="peer hidden"
+                />
+                <div className="text-center py-2 border border-neutral-700 rounded bg-neutral-800 peer-checked:border-white">
+                    Client
+                </div>
+                </label>
+            </div>            
 
             <button
-                type="submit"                
-                className="w-full px-3 py-2 border border-gray-200 rounded bg-white text-gray-900"
-            >
-                Create account
+                type="submit"
+                className="w-full bg-black! text-white! py-2 px-4 rounded hover:bg-gray-800 transition-colors mt-6" 
+                >
+                Create Account
             </button>
         </form>
     </div>

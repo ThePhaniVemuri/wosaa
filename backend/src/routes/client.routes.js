@@ -1,5 +1,13 @@
 import { Router } from "express";
-import { registerClient, postGig, postedGigsByClient, hireFreelancer } from "../controllers/client.controller.js";
+import { 
+  registerClient, 
+  postGig, 
+  postedGigsByClient, 
+  hireFreelancer, 
+  createCheckoutSession, 
+  createContract,
+  setGigStatus
+} from "../controllers/client.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
@@ -20,6 +28,12 @@ router.get("/me", verifyJWT, async (req, res, next) => {
 router.post("/post-gig", verifyJWT, postGig);
 router.get("/posted-gigs", verifyJWT, postedGigsByClient);
 router.post("/hire-freelancer", verifyJWT, hireFreelancer);
+
+router.post("/create-contract", verifyJWT, createContract);
+router.post("/payments/checkout", verifyJWT, createCheckoutSession);
+
+router.post("/set-gig-status", verifyJWT, setGigStatus)
+
 
 // you can add more client routes here (hire, view applicants, etc.)
 

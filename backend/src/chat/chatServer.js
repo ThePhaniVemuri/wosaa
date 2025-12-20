@@ -17,13 +17,13 @@ export default function startChatServer(httpServer) {
 
     socket.on("join-room", ({ roomId }) => {
       socket.join(roomId);
-      console.log(`User ${socket.id} joined room: ${roomId}`);      
+      console.log(`User ${socket.id} joined room: ${roomId}`);
 
       console.log(`All users in room ${roomId}`, io.sockets.adapter.rooms.get(roomId));
-    });    
+    });
 
     socket.on("send-message", async ({ roomId, sender, text }) => {  // msg = { roomId, sender, text }
-      console.log("Received message to save:", { roomId, sender, text }); 
+      console.log("Received message to save:", { roomId, sender, text });
       const message = await Message.create({
         roomId,
         senderId: sender,

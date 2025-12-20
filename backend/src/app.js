@@ -13,6 +13,12 @@ app.use(cors({
     credentials: true
 }))
 
+app.use(
+    '/api/v1/client/payments/webhook', 
+    express.raw({ type: 'application/json' }),
+    manageWebhook
+);
+
 app.use(express.json({limit: "16kb"}))
 app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
@@ -24,10 +30,10 @@ app.use(cookieParser())
 import userRegisterRouter from './routes/user.routes.js';
 import freelancerRouter from './routes/freelancer.routes.js';
 import clientRouter from './routes/client.routes.js';
+import manageWebhook from './webhooks/dodoWebhook.js';
 
 app.use('/api/v1/users', userRegisterRouter)
 app.use('/api/v1/freelancer', freelancerRouter)
 app.use('/api/v1/client', clientRouter)
-
 
 export {app};

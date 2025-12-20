@@ -103,37 +103,48 @@ function ClientChat() {
     setInput("");
   };
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>Gig: {gigTitle}</h2>
+ return (
+    <div className="p-6 bg-neutral-950 text-gray-100 font-serif min-h-screen flex flex-col items-center">
+        <h2 className="text-2xl font-bold mb-4 text-white">
+        Gig: {gigTitle}
+        </h2>
 
-      {/* MESSAGE BOX */}
-      <div
-        style={{
-          border: "1px solid #ccc",
-          height: "300px",
-          overflowY: "auto",
-          padding: "10px",
-          marginBottom: "10px",
-        }}
-      >
+        {/* MESSAGE BOX */}
+        <div
+        className="w-full max-w-2xl border border-gray-700 rounded-xl p-4 h-80 overflow-y-auto mb-6 bg-neutral-900 shadow-lg"
+        >
         {messages.map((msg, idx) => (
-          <div key={idx}>
-            <b>{String(msg.sender) == String(clientId) ? "You" : "Freelancer"}:</b> {msg.text}
-          </div>
+            <div
+            key={idx}
+            className={`mb-3 ${
+                String(msg.sender) === String(clientId)
+                ? "text-gray-300 text-right"
+                : "text-gray-400 text-left"
+            }`}
+            >
+            <b className="text-white">
+                {String(msg.sender) === String(clientId) ? "You" : "Freelancer"}:
+            </b>{" "}
+            {msg.text}
+            </div>
         ))}
-      </div>
+        </div>
 
-      {/* INPUT */}
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        style={{ width: "70%", padding: "5px" }}
-      />
-      <button onClick={handleSend} style={{ marginLeft: "10px" }}>
-        Send
-      </button>
+        {/* INPUT */}
+        <div className="w-full max-w-2xl flex items-center">
+        <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 px-4 py-2 rounded-xl bg-neutral-800 text-gray-100 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
+        />
+        <button
+            onClick={handleSend}
+            className="ml-4 px-6 py-2 rounded-xl bg-white text-black font-medium hover:bg-gray-200 transition-all"
+        >
+            Send
+        </button>
+        </div>
     </div>
   );
 }

@@ -1,17 +1,10 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
+import { useUser } from "../context/UserContext.jsx";
 import { logoutUser } from "../api/logoutUser.js";
 
 export default function Layout() {
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-      navigate("/login");
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
-  };
+  const { user } = useUser();
+  const navigate = useNavigate();  
 
   return (
     <div className="min-h-screen bg-neutral-950 text-gray-100 font-serif flex flex-col">
@@ -30,48 +23,56 @@ export default function Layout() {
       <nav className="w-full bg-neutral-900/70 backdrop-blur-md sticky top-0 z-50 border-b border-neutral-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-3 hover:opacity-90 transition">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition">
             <img src="/wosaa.png" alt="WOSAA Logo" className="h-9 w-9" />
             <span className="text-2xl tracking-tight font-semibold text-white">
               WOSAA
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 text-gray-300">
-            <a href="#about" className="hover:text-white transition">
+            <a href="/about" className="hover:text-white transition">
               About
             </a>
-            <a href="#features" className="hover:text-white transition">
-              Features
-            </a>
-            <a href="#contact" className="hover:text-white transition">
+            <a href="/contact" className="hover:text-white transition">
               Contact
             </a>
           </div>
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">
-            <a
-              href="/register"
-              className="hidden sm:inline-flex items-center px-4 py-2 rounded-lg border border-neutral-700 text-gray-200 hover:bg-neutral-800 transition-all text-sm"
-            >
-              Register
-            </a>
+            {!user && (
+              <Link
+                to="/register"
+                className="hidden sm:inline-flex items-center px-4 py-2 rounded-lg border border-neutral-700 text-gray-200 hover:bg-neutral-800 transition-all text-sm"
+              >
+                Register
+              </Link>
+            )}
 
-            <a
-              href="/login"
-              className="inline-flex items-center px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-gray-200 transition-all"
-            >
-              Login
-            </a>
+            {!user && (
+              <Link
+                to="/login"
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-gray-200 transition-all"
+              >
+                Login
+              </Link>
+            )}
 
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 rounded-lg border border-neutral-700 text-gray-300 hover:bg-neutral-800 transition-all text-sm"
-            >
-              Logout
-            </button>
+            {user && (
+              <>
+                <span className="hidden sm:inline-block text-sm text-gray-200">
+                  Hi, {user.name}
+                </span>
+                <button
+                  onClick={logoutUser}
+                  className="px-4 py-2 rounded-lg border border-neutral-700 text-gray-300 hover:bg-neutral-800 transition-all text-sm"
+                >
+                  Logout
+                </button>
+              </>
+            )}
 
             {/* Mobile Menu */}
             <a

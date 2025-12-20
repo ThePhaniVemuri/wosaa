@@ -15,6 +15,10 @@ const clientSchema = new Schema({
     hiredFreelancers: {
         type: [{type: mongoose.Schema.Types.ObjectId, ref: "Freelancer" }],
         default: []
+    },
+    completedContracts: {
+        type: [{type: mongoose.Schema.Types.ObjectId, ref: "Contract" }],
+        default: []
     }
 });
 
