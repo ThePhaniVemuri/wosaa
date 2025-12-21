@@ -22,7 +22,7 @@ function parseCookies(cookieHeader = "") {
 export default function startChatServer(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: process.env.CORS_ORIGIN,
       credentials: true,
     },
   });
@@ -71,15 +71,13 @@ export default function startChatServer(httpServer) {
      🔌 SOCKET CONNECTION
      =============================== */
   io.on("connection", (socket) => {
-    console.log("⚡ User connected:", socket.user._id.toString());
+    // console.log("⚡ User connected:", socket.user._id.toString());
 
     socket.on("join-room", ({ roomId }) => {
       if (!roomId) return;
 
       socket.join(roomId);
-      console.log(
-        `User ${socket.user._id} joined room ${roomId}`
-      );
+      // console.log(`User ${socket.user._id} joined room ${roomId}`);
     });
 
     socket.on("send-message", async ({ roomId, text }) => {
@@ -100,7 +98,7 @@ export default function startChatServer(httpServer) {
     });
 
     socket.on("disconnect", () => {
-      console.log("❌ User disconnected:", socket.user._id.toString());
+      // console.log("❌ User disconnected:", socket.user._id.toString());
     });
   });
 }

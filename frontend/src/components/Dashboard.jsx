@@ -511,7 +511,7 @@ export function Dashboard() {
                       — {gig.postedBy?.name || "Unknown"} from {gig.postedBy?.company || "—"} ({gig.budget}$)
                     </span>
 
-                    {alreadyApplied || gigApplied? (
+                    {alreadyApplied ? (
                       <button
                         disabled
                         className="ml-4 px-3 py-1 bg-gray-500 text-green-500 rounded-lg text-sm cursor-not-allowed"
