@@ -508,7 +508,7 @@ export function Dashboard() {
                       <p className="text-gray-400 text-sm mt-1">{gig.description}</p>
                     )}
                     <span className="text-gray-500 text-sm">
-                      — {gig.postedBy?.name || "Unknown"} from {gig.postedBy?.company || "—"} ({gig.budget}$)
+                      — {gig.postedBy?.name || "Unknown"} from company: {gig.postedBy?.company || "—"} Budget: ({gig.budget}$)
                     </span>
 
                     {alreadyApplied ? (

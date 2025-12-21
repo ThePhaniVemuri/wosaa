@@ -6,18 +6,18 @@ import { Message } from "../models/Message.models.js";
 /**
  * Parse cookies manually (works for socket.handshake.headers.cookie)
  */
-function parseCookies(cookieHeader = "") {
-  return cookieHeader
-    .split(";")
-    .map(c => c.trim())
-    .filter(Boolean)
-    .reduce((acc, cur) => {
-      const idx = cur.indexOf("=");
-      if (idx === -1) return acc;
-      acc[cur.slice(0, idx)] = decodeURIComponent(cur.slice(idx + 1));
-      return acc;
-    }, {});
-}
+// function parseCookies(cookieHeader = "") {
+//   return cookieHeader
+//     .split(";")
+//     .map(c => c.trim())
+//     .filter(Boolean)
+//     .reduce((acc, cur) => {
+//       const idx = cur.indexOf("=");
+//       if (idx === -1) return acc;
+//       acc[cur.slice(0, idx)] = decodeURIComponent(cur.slice(idx + 1));
+//       return acc;
+//     }, {});
+// }
 
 export default function startChatServer(httpServer) {
   const io = new Server(httpServer, {
@@ -32,37 +32,58 @@ export default function startChatServer(httpServer) {
   /* ===============================
      🔐 SOCKET AUTH MIDDLEWARE
      =============================== */
+  // io.use(async (socket, next) => {
+  //   console.log("Middleware called")
+  //   try {
+  //     const cookieHeader = socket.handshake.headers.cookie;
+  //     if (!cookieHeader) {
+  //       return next(new Error("Authentication required"));
+  //     }
+
+  //     const cookies = parseCookies(cookieHeader);
+  //     const token = cookies.accessToken;
+
+  //     if (!token) {
+  //       return next(new Error("Access token missing"));
+  //     }
+
+  //     const decoded = jwt.verify(
+  //       token,
+  //       process.env.ACCESS_TOKEN_SECRET
+  //     );
+
+  //     const user = await User.findById(decoded._id).select("-password");
+  //     if (!user) {
+  //       return next(new Error("User not found"));
+  //     }
+  //     console.log("Middleware success")
+
+  //     // attach user to socket
+  //     socket.user = user;
+  //     next();
+  //   } catch (err) {
+  //     console.error("Socket auth error:", err.message);
+  //     next(new Error("Invalid or expired token"));
+  //   }
+  // });
+
   io.use(async (socket, next) => {
-    console.log("Middleware called")
     try {
-      const cookieHeader = socket.handshake.headers.cookie;
-      if (!cookieHeader) {
-        return next(new Error("Authentication required"));
-      }
-
-      const cookies = parseCookies(cookieHeader);
-      const token = cookies.accessToken;
-
+      const token = socket.handshake.auth?.token;
       if (!token) {
         return next(new Error("Access token missing"));
       }
 
-      const decoded = jwt.verify(
-        token,
-        process.env.ACCESS_TOKEN_SECRET
-      );
-
+      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
       const user = await User.findById(decoded._id).select("-password");
+
       if (!user) {
         return next(new Error("User not found"));
       }
-      console.log("Middleware success")
 
-      // attach user to socket
       socket.user = user;
       next();
     } catch (err) {
-      console.error("Socket auth error:", err.message);
       next(new Error("Invalid or expired token"));
     }
   });

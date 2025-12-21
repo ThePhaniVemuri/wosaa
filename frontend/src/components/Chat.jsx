@@ -76,7 +76,10 @@ function Chat() {
     // console.log("Connecting to chat server at:", backendOrigin);
 
     const socket = io(backendOrigin, {
-      withCredentials: true,      
+      auth: {
+        token: localStorage.getItem("accessToken"),
+      },
+      transports: ["websocket"],
     });
 
     // console.log("Socket object:", socket);

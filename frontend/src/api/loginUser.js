@@ -8,11 +8,16 @@ export async function loginUser(credentials) {
         body: JSON.stringify(credentials),
     });
 
-    const text = await res.text();
+    const text = await res.text();    
+
     if (!res.ok) {
         let msg = text;
         try { msg = JSON.parse(text).message || text } catch (e) {}
         throw new Error(msg || "Failed to login");
+    }
+    else{
+        // for socket auth
+        localStorage.setItem("accessToken", data.accessToken);
     }
     return JSON.parse(text);
 }
