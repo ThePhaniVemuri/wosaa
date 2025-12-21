@@ -45,8 +45,8 @@ const registerClient = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .cookie("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production" })
-    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production" })
+    .cookie("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "none" })
+    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "none" })
     .json({
       success: true,
       message: "Client registered and logged in successfully",

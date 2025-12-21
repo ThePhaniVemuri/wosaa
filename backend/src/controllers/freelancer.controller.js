@@ -56,8 +56,8 @@ const registerFreelancer = asyncHandler(async (req, res, next) => {
 
   return res
     .status(201)
-    .cookie("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite:"lax" })
-    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite:"lax" })
+    .cookie("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite:"none" })
+    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite:"none" })
     .json({
       success: true,
       message: "Freelancer registered and logged in successfully",

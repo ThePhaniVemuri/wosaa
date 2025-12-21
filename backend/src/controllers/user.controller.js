@@ -118,12 +118,12 @@ const loginUser = asyncHandler(async (req, res) => {
         cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            sameSite: "none",
         })
         .cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            sameSite: "none",
         })
         .json({
             success: true,
@@ -151,7 +151,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: "none",
     }
 
     return res
@@ -206,7 +206,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         const options = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "lax"
+            sameSite: "none"
         }
 
         // ->generating new tokens
