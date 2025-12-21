@@ -59,8 +59,7 @@ function ClientChat() {
 
     const backendOrigin = API_BASE.replace(/\/api\/v1\/?$/i, "");
     const socket = io(backendOrigin, {
-      withCredentials: true,
-      transports: ["websocket"],
+      withCredentials: true,      
     });
 
     socketRef.current = socket;
