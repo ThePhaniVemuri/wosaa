@@ -161,7 +161,7 @@ const gigsInWork = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Freelancer profile not found");
   }
 
-  console.log("Freelancer's gigs in work:", freelancer.currentlyWorkingOn); 
+  // console.log("Freelancer's gigs in work:", freelancer.currentlyWorkingOn); 
 
   res.status(200).json({
     success: true,
