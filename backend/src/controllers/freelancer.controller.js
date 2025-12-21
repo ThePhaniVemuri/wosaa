@@ -71,7 +71,7 @@ const registerFreelancer = asyncHandler(async (req, res, next) => {
 
 const applyToGig = asyncHandler(async (req, res, next) => {
   const { gigId, bidAmount, note } = req.body;
-  // console.log("Received applyToGig request with gigId:", gigId, "bidAmount:", bidAmount, "note:", note);
+  console.log("Received applyToGig request with gigId:", gigId, "bidAmount:", bidAmount, "note:", note);
   const freelancerId = req.user._id;
 
   const gig = await Gig.findById(gigId);
@@ -88,7 +88,7 @@ const applyToGig = asyncHandler(async (req, res, next) => {
   console.log("Freelancer has not applied yet, proceeding with application.");
 
   // important to push application details
-  gig.applicants.push({ freelancerId, appliedAt: new Date(), status: 'applied', bidAmount, note });
+  gig.applicants.push({ freelancerId: freelancerId, appliedAt: new Date(), status: 'applied', bidAmount: bidAmount, note: note });
   await gig.save();
   // console.log("Gig after application:", gig);
 

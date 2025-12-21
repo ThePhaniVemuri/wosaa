@@ -553,6 +553,7 @@ export function Dashboard() {
                           <button
                             onClick={() => {
                               applyToGigg(gig._id, bidAmount, note); 
+                              console.log(bidAmount, note)
                               setOpenGigId(null);
                               setBidAmount("");
                               setNote("");
