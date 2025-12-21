@@ -74,6 +74,15 @@ const applyToGig = asyncHandler(async (req, res, next) => {
   console.log("Received applyToGig request with gigId:", gigId, "bidAmount:", bidAmount, "note:", note);
   const freelancerId = req.user._id;
 
+  // Validate bidAmount
+  const bid = bidAmount === undefined || bidAmount === null || String(bidAmount).trim() === ""
+    ? null
+    : Number(bidAmount);
+
+  if (bid === null || Number.isNaN(bid) || bid <= 0) {
+    throw new ApiError(400, "bidAmount is required and must be a positive number");
+  }
+
   const gig = await Gig.findById(gigId);
   if (!gig) {
     throw new ApiError(404, "Gig not found");
@@ -88,8 +97,21 @@ const applyToGig = asyncHandler(async (req, res, next) => {
   console.log("Freelancer has not applied yet, proceeding with application.");
 
   // important to push application details
-  gig.applicants.push({ freelancerId: freelancerId, appliedAt: new Date(), status: 'applied', bidAmount: bidAmount, note: note });
-  await gig.save();
+  await Gig.findByIdAndUpdate(
+    gigId,
+    {
+      $push: {
+        applicants: {
+          freelancerId: freelancerId,
+          appliedAt: new Date(),
+          status: "applied",
+          bidAmount: bid,
+          note: note || "",
+        },
+      },
+    },
+    { new: true }
+  );
   // console.log("Gig after application:", gig);
 
   const freelancer = await Freelancer.findOne({ userId: freelancerId });
@@ -107,10 +129,11 @@ const applyToGig = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, "Freelancer has already applied to this gig");
   }
 
-  freelancer.gigsApplied.push(gigId);
-  // console.log("Freelancer after applying:", freelancer);
-
-  await freelancer.save();
+  await Freelancer.findOneAndUpdate(
+    { userId: freelancerId },
+    { $addToSet: { gigsApplied: gigId } },
+    { new: true }
+  );
 
   res
     .status(200)
