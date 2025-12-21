@@ -11,11 +11,11 @@ export async function registerUser(data) {
         })
 
         const resdata = await res.json();
-        console.log("User registration response data:", resdata);   
+        // console.log("User registration response data:", resdata);   
         try{
             // store as JSON string — was previously storing object directly
             localStorage.setItem("userObject", JSON.stringify(resdata.user));
-            console.log("Stored userObject in localStorage:", resdata.user);
+            // console.log("Stored userObject in localStorage:", resdata.user);
         }
         catch(err){
             console.error("Error storing userObject in localStorage:", err);

@@ -44,19 +44,29 @@ function App() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-            <button
+            {user ? (<button
               onClick={handleDashboardNavigate}
               className="px-8 py-3 rounded-xl bg-white text-black font-medium text-lg hover:bg-gray-200 transition-all"
             >
               Go to Dashboard →
-            </button>
-
+            </button>) : (
+              <>
             <a
               href="/register"
-              className="px-8 py-3 rounded-xl border border-gray-500 text-gray-300 hover:bg-neutral-800 transition-all text-lg text-center"
+              className="px-8 py-3 rounded-xl bg-white text-black font-medium text-lg hover:bg-gray-200 transition-all"
             >
               Get Started
+            </a>      
+
+            <a
+              href="/login"
+              className="px-8 py-3 rounded-xl bg-white text-black font-medium text-lg hover:bg-gray-200 transition-all"
+            >
+              Login
             </a>
+                  
+          </>
+          )}
           </div>
         </div>
 

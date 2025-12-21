@@ -46,7 +46,7 @@ export default function ClientRegisterPage() {
             setCompany("");
             setCountry("");
             // optionally do something with returned data
-            console.log("created client:", data);
+            // console.log("created client:", data);
         } catch (err) {
             console.error(err);
             setError(err.message || "Failed to create client.");
@@ -98,6 +98,7 @@ export default function ClientRegisterPage() {
                     </button>
                     <button
                         type="button"
+                        className="w-full bg-black! text-white! py-2 px-4 rounded hover:bg-gray-800 transition-colors"
                         onClick={() => {
                             setName("");
                             setCompany("");

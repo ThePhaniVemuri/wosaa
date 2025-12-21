@@ -1,7 +1,7 @@
 import { API_BASE } from "./config.js";
 
 export async function registerUserAsFreelancer(data) {
-
+    // console.log(...data)
     const user = JSON.parse(localStorage.getItem("userObject"));
 
     try{
@@ -15,7 +15,7 @@ export async function registerUserAsFreelancer(data) {
         })
 
         const resdata = await res.json();
-        console.log("Registering user as freelancer response data:", resdata);
+        // console.log("Registering user as freelancer response data:", resdata);
         return resdata;
     }    
     catch(error) {

@@ -9,7 +9,7 @@ function ClientChat() {
   const freelancerId = location.state?.freelancerId;
   const gigId = location.state?.gigId;
   const gigTitle = location.state?.gigTitle;
-  console.log("client ID from client chat:", clientId);
+  // console.log("client ID from client chat:", clientId);
 
   const socketRef = useRef(null);
 
@@ -66,7 +66,7 @@ function ClientChat() {
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      console.log("🔗 Client connected:", socket.id);
+      // console.log("🔗 Client connected:", socket.id);
       socket.emit("join-room", { roomId: chatRoomId });
     });
 
@@ -88,7 +88,7 @@ function ClientChat() {
     if (!socketRef.current || !socketRef.current.connected) return;
     if (!chatRoomId || input.trim() === "") return;
 
-    console.log("sending by: ", clientId);
+    // console.log("sending by: ", clientId);
 
     const msg = {
       roomId: chatRoomId,
@@ -96,7 +96,7 @@ function ClientChat() {
       text: input,
     };
 
-    console.log("client sending message:", msg);
+    // console.log("client sending message:", msg);
 
     socketRef.current.emit("send-message", msg);        
 

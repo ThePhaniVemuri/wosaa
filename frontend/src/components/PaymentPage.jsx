@@ -6,8 +6,8 @@ export default function PaymentPage() {
   const contract = useLocation().state?.contract;
   const contractAmount = contract ? contract.amount : 0;
   const { contractId } = useParams();
-  console.log("PaymentPage contractId:", contractId);
-  console.log(contract);
+  // console.log("PaymentPage contractId:", contractId);
+  // console.log(contract);
 
   // useEffect(() => {
   //   const getContractAmount = async () => {
@@ -31,7 +31,7 @@ export default function PaymentPage() {
   // }, [contractId]);
 
   const handlePay = async () => {    
-    console.log("Initiating payment for contract:", contractId, "amount:", contractAmount);
+    // console.log("Initiating payment for contract:", contractId, "amount:", contractAmount);
 
     const res = await fetch(`${API_BASE}/client/payments/checkout`, {
       method: "POST",

@@ -56,11 +56,11 @@ export default function PostGig() {
       skillsRequired,
       // attachments will not be uploaded in this simple example.
     };
-    console.log("Submitting gig:", payload);
+    // console.log("Submitting gig:", payload);
 
     try {
       const resp = await postGig(payload);
-      console.log("Post gig response:", resp);
+      // console.log("Post gig response:", resp);
       if (resp?.success) {        
         // reset form
         setTitle("");

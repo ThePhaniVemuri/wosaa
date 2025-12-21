@@ -1,39 +1,51 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
+import { noSqlSanitizer } from "./middleware/noSqlSanitizer.js";
+import manageWebhook from "./webhooks/dodoWebhook.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+// some security measures
+app.use(helmet());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 app.use(
-    '/api/v1/client/payments/webhook', 
-    express.raw({ type: 'application/json' }),
-    manageWebhook
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+  })
 );
 
-app.use(express.json({limit: "16kb"}))
-app.use(express.urlencoded({extended: true, limit: "16kb"}))
-app.use(express.static("public"))
-app.use(cookieParser())
+// webhook
+app.use(
+  "/api/v1/client/payments/webhook",
+  express.raw({ type: "application/json" }),
+  manageWebhook
+);
 
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
+// sanitization
+app.use(noSqlSanitizer);
 
-// Routes 
-import userRegisterRouter from './routes/user.routes.js';
-import freelancerRouter from './routes/freelancer.routes.js';
-import clientRouter from './routes/client.routes.js';
-import manageWebhook from './webhooks/dodoWebhook.js';
+app.use(cookieParser());
+app.use(express.static("public"));
 
-app.use('/api/v1/users', userRegisterRouter)
-app.use('/api/v1/freelancer', freelancerRouter)
-app.use('/api/v1/client', clientRouter)
+import userRegisterRouter from "./routes/user.routes.js";
+import freelancerRouter from "./routes/freelancer.routes.js";
+import clientRouter from "./routes/client.routes.js";
 
-export {app};
+app.use("/api/v1/users", userRegisterRouter);
+app.use("/api/v1/freelancer", freelancerRouter);
+app.use("/api/v1/client", clientRouter);
+
+export { app };

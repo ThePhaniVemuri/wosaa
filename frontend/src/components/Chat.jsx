@@ -39,11 +39,11 @@ function Chat() {
     async function loadChat() {
       try {
         const result = await getChatRoomId(clientId, freelancerId, gigId);
-        console.log("Chat Room Data:", result);
+        // console.log("Chat Room Data:", result);
 
         // backend returns { success: true, chatRoom, messages }
         const roomId = result?.chatRoom?._id || result?.chatRoomId;
-        console.log("Chat Room ID:", roomId);
+        // console.log("Chat Room ID:", roomId);
         if (!roomId) throw new Error("No chatRoom id returned from server");
 
         setChatRoomId(roomId);
@@ -55,12 +55,12 @@ function Chat() {
         }));
 
         setMessages(loadedmessages || []);
-        console.log("Loaded messages:", loadedmessages);
-        console.log(messages)        
+        // console.log("Loaded messages:", loadedmessages);
+        // console.log(messages)        
         
-        console.log("Loaded messages:", result.messages);
+        // console.log("Loaded messages:", result.messages);
       } catch (err) {
-        console.error("Failed to get/create chat room:", err);
+        // console.error("Failed to get/create chat room:", err);
       }
     }
 
@@ -73,18 +73,19 @@ function Chat() {
 
     // derive backend origin from API_BASE (strip "/api/v1")
     const backendOrigin = API_BASE.replace(/\/api\/v1\/?$/i, "");
-    console.log("Connecting to chat server at:", backendOrigin);
+    // console.log("Connecting to chat server at:", backendOrigin);
+
     const socket = io(backendOrigin, {
       withCredentials: true,
-      transports: ["websocket"],
+      transports: ["websocket"],      
     });
 
-    console.log("Socket object:", socket);
+    // console.log("Socket object:", socket);
 
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      console.log("🔗 Connected to chat server with ID:", socket.id);
+      // console.log("🔗 Connected to chat server with ID:", socket.id);
       // join once connected
       socket.emit("join-room", { roomId: chatRoomId });
     });
@@ -95,7 +96,7 @@ function Chat() {
 
     socket.on("receive-message", (msg) => {
       // msg = { sender, text, createdAt } from client
-      console.log("Received message:", msg);
+      // console.log("Received message:", msg);
       setMessages((prev) => [...prev, msg]);
     });
 

@@ -1,6 +1,7 @@
 import mongoose, {Schema} from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const userSchema = new Schema({
     name: {
@@ -22,7 +23,10 @@ const userSchema = new Schema({
         enum: ["client", "freelancer"], 
         required: true 
     },
-    refreshToken: String,
+    refreshTokens: [{
+        tokenHash: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+    }]
 }, {timestamps: true});
 
 userSchema.pre("save", async function (next) {

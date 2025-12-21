@@ -60,9 +60,9 @@ const registerClient = asyncHandler(async (req, res) => {
 
 const postGig = asyncHandler(async (req, res, next) => {
     const { title, description, category, budget, deliveryTimeInDays, skillsRequired, attachments } = req.body;
-    console.log(req.body)
+    // console.log(req.body)
     const userId = req.user._id; 
-    console.log(userId) 
+    // console.log(userId) 
 
     // Find the client associated with the user
     const client = await Client.findOne({ userId: userId });
@@ -214,14 +214,14 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
   const amountInCents = amount * 100;
 
   const contractId = metadata.contractId;
-  console.log("Creating checkout session for contractId:", contractId);
+  // console.log("Creating checkout session for contractId:", contractId);
 
   const contract = await Contract.findById(contractId);
   if (!contract) {
     throw new ApiError(404, "Contract not found");
   }
 
-  console.log("secret:", process.env.DODO_SECRET_KEY)
+  // console.log("secret:", process.env.DODO_SECRET_KEY)
 
   // Initialize the Dodo Payments client
   const client = new DodoPayments({
@@ -233,7 +233,7 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
     const session = await client.checkoutSessions.create({
       product_cart: [
         {
-          product_id: "pdt_NDYDq6IJxKRR2EL5fho2B",
+          product_id: process.env,PRODUCT_ID,
           quantity: 1,
           amount: amountInCents,
         },
@@ -259,8 +259,8 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
       // },
     });
 
-    console.log("Checkout URL:", session.checkout_url);
-    console.log("Session ID:", session.session_id);
+    // console.log("Checkout URL:", session.checkout_url);
+    // console.log("Session ID:", session.session_id);
 
     res.status(200).json({
       url: session.checkout_url,
@@ -296,9 +296,9 @@ const setGigStatus = asyncHandler(async (req, res) => {
 
             // optional: mark contract as completed/ready for release
             if (contract) {
-            contract.status = "COMPLETED";
-            contract.paymentStatus = "READY_FOR_RELEASE";
-            await contract.save();
+              contract.status = "COMPLETED";
+              contract.paymentStatus = "READY_FOR_RELEASE";
+              await contract.save();
             }
 
             const subject = `Release funds for completed gig: ${gig.title || gig._id}`;
@@ -320,6 +320,18 @@ const setGigStatus = asyncHandler(async (req, res) => {
         } catch (err) {
             console.error("Error sending release-funds email:", err);
         }
+
+        // after sending mail, update the freelancer earnings
+        const freelancerId = gig.hiredFreelancer
+        const freelancer = await User.findById({freelancerId})
+        
+        const applicant = gig.applicants.find(
+          a => a.freelancerId.toString() === freelancerId.toString()
+        );
+        const bidAmount = applicant ? applicant.bidAmount : null;
+
+        freelancer.earnings += bidAmount
+        await freelancer.save();
     }
 
     gig.status = status;

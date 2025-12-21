@@ -46,18 +46,18 @@ const registerFreelancer = asyncHandler(async (req, res, next) => {
   })
 
   const userDoc = await User.findById(userId).select("-password -refreshToken");
-  console.log("Freelancer created with ID:", freelancer._id);
+  // console.log("Freelancer created with ID:", freelancer._id);
   const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(userId);
 
   if (!freelancer) {
     throw new ApiError(500, "Failed to register freelancer")
   }
-  console.log("Freelancer registered:", freelancer._id);
+  // console.log("Freelancer registered:", freelancer._id);
 
   return res
     .status(201)
-    .cookie("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production" })
-    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production" })
+    .cookie("accessToken", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite:"lax" })
+    .cookie("refreshToken", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite:"lax" })
     .json({
       success: true,
       message: "Freelancer registered and logged in successfully",
@@ -71,14 +71,14 @@ const registerFreelancer = asyncHandler(async (req, res, next) => {
 
 const applyToGig = asyncHandler(async (req, res, next) => {
   const { gigId, bidAmount, note } = req.body;
-  console.log("Received applyToGig request with gigId:", gigId, "bidAmount:", bidAmount, "note:", note);
+  // console.log("Received applyToGig request with gigId:", gigId, "bidAmount:", bidAmount, "note:", note);
   const freelancerId = req.user._id;
 
   const gig = await Gig.findById(gigId);
   if (!gig) {
     throw new ApiError(404, "Gig not found");
   }
-  console.log("Gig found:", gig);
+  // console.log("Gig found:", gig);
 
   // Check if the freelancer has already applied
   const alreadyApplied = gig.applicants.some(applicant => applicant.freelancerId.equals(freelancerId));
@@ -90,7 +90,7 @@ const applyToGig = asyncHandler(async (req, res, next) => {
   // important to push application details
   gig.applicants.push({ freelancerId, appliedAt: new Date(), status: 'applied', bidAmount, note });
   await gig.save();
-  console.log("Gig after application:", gig);
+  // console.log("Gig after application:", gig);
 
   const freelancer = await Freelancer.findOne({ userId: freelancerId });
   if (!freelancer) {
@@ -99,8 +99,8 @@ const applyToGig = asyncHandler(async (req, res, next) => {
 
   if (freelancer.gigsApplied === undefined) {
     freelancer.gigsApplied = [];
-    console.log(freelancer);
-    console.log(freelancer.gigsApplied);
+    // console.log(freelancer);
+    // console.log(freelancer.gigsApplied);
   }
 
   if (freelancer.gigsApplied.includes(gigId)) {
@@ -108,7 +108,7 @@ const applyToGig = asyncHandler(async (req, res, next) => {
   }
 
   freelancer.gigsApplied.push(gigId);
-  console.log("Freelancer after applying:", freelancer);
+  // console.log("Freelancer after applying:", freelancer);
 
   await freelancer.save();
 

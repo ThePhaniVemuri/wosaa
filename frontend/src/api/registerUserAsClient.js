@@ -14,7 +14,7 @@ export async function registerUserAsClient(data) {
       }
     }
 
-    console.log("Registering user as client with data:", {user, ...data});
+    // console.log("Registering user as client with data:", {user, ...data});
 
     try{
         const res = await fetch(`${API_BASE}/client/register`, {

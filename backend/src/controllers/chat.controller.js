@@ -25,7 +25,7 @@ const chatRoomLogic = async (req, res) => {
         }
 
         const messages = await Message.find({ roomId: chatRoom._id }).sort({ createdAt: 1 });
-        console.log("Retrieved messages:", messages);        
+        // console.log("Retrieved messages:", messages);        
 
         if (!messages) {            
             messages = [];

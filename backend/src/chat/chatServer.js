@@ -1,45 +1,106 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
+import { User } from "../models/User.models.js";
 import { Message } from "../models/Message.models.js";
 
+/**
+ * Parse cookies manually (works for socket.handshake.headers.cookie)
+ */
+function parseCookies(cookieHeader = "") {
+  return cookieHeader
+    .split(";")
+    .map(c => c.trim())
+    .filter(Boolean)
+    .reduce((acc, cur) => {
+      const idx = cur.indexOf("=");
+      if (idx === -1) return acc;
+      acc[cur.slice(0, idx)] = decodeURIComponent(cur.slice(idx + 1));
+      return acc;
+    }, {});
+}
+
 export default function startChatServer(httpServer) {
-  console.log("io function called");
   const io = new Server(httpServer, {
     cors: {
       origin: "http://localhost:5173",
       credentials: true,
     },
   });
-  console.log("Socket.io server initialized.");
 
+  console.log("✅ Socket.io server initialized");
+
+  /* ===============================
+     🔐 SOCKET AUTH MIDDLEWARE
+     =============================== */
+  io.use(async (socket, next) => {
+    console.log("Middleware called")
+    try {
+      const cookieHeader = socket.handshake.headers.cookie;
+      if (!cookieHeader) {
+        return next(new Error("Authentication required"));
+      }
+
+      const cookies = parseCookies(cookieHeader);
+      const token = cookies.accessToken;
+
+      if (!token) {
+        return next(new Error("Access token missing"));
+      }
+
+      const decoded = jwt.verify(
+        token,
+        process.env.ACCESS_TOKEN_SECRET
+      );
+
+      const user = await User.findById(decoded._id).select("-password");
+      if (!user) {
+        return next(new Error("User not found"));
+      }
+      console.log("Middleware success")
+
+      // attach user to socket
+      socket.user = user;
+      next();
+    } catch (err) {
+      console.error("Socket auth error:", err.message);
+      next(new Error("Invalid or expired token"));
+    }
+  });
+
+  /* ===============================
+     🔌 SOCKET CONNECTION
+     =============================== */
   io.on("connection", (socket) => {
-    console.log("io function called");
-    console.log("⚡ User connected:", socket.id);
+    console.log("⚡ User connected:", socket.user._id.toString());
 
     socket.on("join-room", ({ roomId }) => {
-      socket.join(roomId);
-      console.log(`User ${socket.id} joined room: ${roomId}`);
+      if (!roomId) return;
 
-      console.log(`All users in room ${roomId}`, io.sockets.adapter.rooms.get(roomId));
+      socket.join(roomId);
+      console.log(
+        `User ${socket.user._id} joined room ${roomId}`
+      );
     });
 
-    socket.on("send-message", async ({ roomId, sender, text }) => {  // msg = { roomId, sender, text }
-      console.log("Received message to save:", { roomId, sender, text });
+    socket.on("send-message", async ({ roomId, text }) => {
+      if (!roomId || !text) return;
+
       const message = await Message.create({
         roomId,
-        senderId: sender,
+        senderId: socket.user._id,
         message: text,
         isRead: false,
       });
 
       io.to(roomId).emit("receive-message", {
-        sender,
+        sender: socket.user._id,
         text,
         createdAt: message.createdAt,
       });
     });
 
     socket.on("disconnect", () => {
-      console.log("❌ User disconnected:", socket.id);
+      console.log("❌ User disconnected:", socket.user._id.toString());
     });
   });
 }

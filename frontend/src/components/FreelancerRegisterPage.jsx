@@ -29,10 +29,10 @@ export default function FreelancerRegisterPage() {
       earnings: Number(data.earnings) || 0,
     };
 
-    console.log("Submitting:", payload);
+    // console.log("Submitting:", payload);
     const result = await registerUserAsFreelancer(payload);
     
-    console.log("Freelancer registration result:", result); 
+    // console.log("Freelancer registration result:", result); 
 
     if (result.success) {
       navigate('/dashboard');      
@@ -127,7 +127,7 @@ export default function FreelancerRegisterPage() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full px-4 py-3 bg-black text-white rounded-lg font-medium hover:opacity-95"
+          className="w-full px-4 py-3 bg-white! text-black! rounded-lg font-medium hover:opacity-95"
         >
           Complete Registration
         </button>

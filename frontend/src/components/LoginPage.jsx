@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../api/loginUser.js";
+import { useUser } from "../context/UserContext.jsx";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const {setUser} = useUser();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -11,7 +13,8 @@ export default function LoginPage() {
 
     try {
       const resdata = await loginUser(data);               
-      console.log("Login successful:", resdata);
+      // console.log("Login successful:", resdata);
+      setUser(resdata.user)
       navigate('/dashboard', { state: { isloggedIn: true, resdata }});
     } catch (error) {
       console.error('Login failed:', error);

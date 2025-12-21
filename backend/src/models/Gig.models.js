@@ -13,7 +13,10 @@ const GigSchema = new mongoose.Schema(
                 freelancerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Changed from "Freelancer" to "User"
                 appliedAt: { type: Date, default: Date.now },
                 status: { type: String, enum: ['applied', 'accepted', 'rejected'], default: 'applied' },
-                bidAmount : { type: Number},
+                bidAmount : { 
+                    required:true,
+                    type: Number
+                },
                 note: { type: String }
             }
         ],       

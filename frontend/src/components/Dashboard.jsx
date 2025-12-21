@@ -5,12 +5,16 @@ import { applyToGig } from "../api/applyToGig.js";
 import { hireFreelancer } from "../api/hireFreelancer.js";
 import { getGigsInWork } from "../api/getgigsInWork.js";
 import { API_BASE } from "../api/config.js";
+import { useUser } from "../context/UserContext.jsx";
+
 
 export function Dashboard() {
-  const [user, setUser] = useState(null);
+  const {user, setUser} = useUser()
+
   const [gigsByClient, setGigsByClient] = useState([]);
   const [gigs, setGigs] = useState([]);
   const [isApplying, setIsApplying] = useState(false);
+  const [gigApplied, setGigApplied] = useState(false)
   const [gigsInWork, setGigsInWork] = useState([]);
   const navigate = useNavigate();
 
@@ -33,28 +37,28 @@ export function Dashboard() {
 
   const location = useLocation();
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetchWithRefresh("/users/currentuser", {
-          method: "GET",          
-        });
+  // useEffect(() => {
+  //   async function fetchUser() {
+  //     try {
+  //       const res = await fetchWithRefresh("/users/currentuser", {
+  //         method: "GET",          
+  //       });
 
-        if (res.status === 401) {
-          console.log("User not logged in");
-          navigate("/login");
-          return;
-        }
+  //       if (res.status === 401) {
+  //         console.log("User not logged in");
+  //         navigate("/login");
+  //         return;
+  //       }
 
-        const data = await res.json();
-        setUser(data.user);
-      } catch (err) {
-        console.error("Error fetching current user:", err);
-      }
-    }
+  //       const data = await res.json();
+  //       setUser(data.user);
+  //     } catch (err) {
+  //       console.error("Error fetching current user:", err);
+  //     }
+  //   }
 
-    fetchUser();
-  }, [navigate]);
+  //   fetchUser();
+  // }, [navigate]);
 
   useEffect(() => {
     const postedGigsByClient = async () => {
@@ -63,11 +67,11 @@ export function Dashboard() {
 
         if (res.ok) {
           const data = await res.json();
-          console.log("Posted gigs by client data:", data);
+          // console.log("Posted gigs by client data:", data);
           setGigsByClient(data.postedGigs || []);
         } else {
           const errorText = await res.text();
-          console.log("Error while fetching posts by client: " + errorText);
+          // console.log("Error while fetching posts by client: " + errorText);
         }
       } catch (err) {
         console.error("Error in postedGigsByClient:", err);
@@ -83,14 +87,14 @@ export function Dashboard() {
     const getGigs = async () => {
       try {
         const res = await fetch(`${API_BASE}/freelancer/gigs`, { method: "GET" });
-        console.log("Fetch gigs response:", res);
+        // console.log("Fetch gigs response:", res);
 
         if (res.ok) {
           const data = await res.json();
           setGigs(data.gigs || []);
-          console.log("Gigs fetched for freelancer:", data.gigs);
+          // console.log("Gigs fetched for freelancer:", data.gigs);
         } else {
-          console.log("gigs get method fail");
+          // console.log("gigs get method fail");
         }
       } catch (err) {
         console.error("Error fetching gigs:", err);
@@ -106,13 +110,14 @@ export function Dashboard() {
     if (isApplying) return; // Prevent multiple submissions
     setIsApplying(true);
     try {
-      console.log("Applying to gig:", gigId, "with bid:", bidAmount, "and note:", note);
+      // console.log("Applying to gig:", gigId, "with bid:", bidAmount, "and note:", note);
       const data = await applyToGig(gigId, bidAmount, note);
-      console.log("Applied to gig response:", data);
+      // console.log("Applied to gig response:", data);
       if (data?.success) {
         console.log("Successfully applied to gig");
+        setGigApplied(true)
       } else {
-        console.log("Failed to apply to gig:", data?.error || "Unknown error");
+        // console.log("Failed to apply to gig:", data?.error || "Unknown error");
       }
     } catch (error) {
       console.error("Error applying to gig from Dashboard:", error);
@@ -151,7 +156,7 @@ export function Dashboard() {
   };
 
   const handleHire = async (clientId, gigId, freelancerId, amount) => {
-    console.log("Initiating hire process for freelancer:", freelancerId, "on gig:", gigId, "with amount:", amount);
+    // console.log("Initiating hire process for freelancer:", freelancerId, "on gig:", gigId, "with amount:", amount);
     if (!freelancerId) {
       console.warn("Cannot hire: freelancerId missing");
       return;
@@ -171,7 +176,7 @@ export function Dashboard() {
         return;
       }
       const contractData = await contractRes.json();
-      console.log("Contract created:", contractData);
+      // console.log("Contract created:", contractData);
       
       // Navigate to Payment Page
       navigate(`/pay/${contractData.contract._id}`, { state: { contract: contractData.contract } });
@@ -186,7 +191,7 @@ export function Dashboard() {
 
     if (!clientId || !freelancerId || !gigId) {
       console.warn("Cannot initiate chat: missing IDs");
-      console.log({ clientId, freelancerId, gigId });
+      // console.log({ clientId, freelancerId, gigId });
       return;
     }
 
@@ -205,9 +210,9 @@ export function Dashboard() {
         const data = await getGigsInWork();
         if (data) {          
           setGigsInWork(data.gigsInWork || []);
-          console.log("Gigs in work data:", data);
+          // console.log("Gigs in work data:", data);
         } else {
-          console.log("Failed to fetch gigs in work");
+          // console.log("Failed to fetch gigs in work");
         }
       } catch (err) {
         console.error("Error fetching gigs in work:", err);
@@ -238,13 +243,13 @@ export function Dashboard() {
       });
 
       const data = await res.json();
-      console.log("Set gig status response:", data);
+      // console.log("Set gig status response:", data);
 
       const currentStatus = data.updatedGig.status;
       setCurrentStatus(currentStatus);
 
       if (res.ok) {        
-        console.log("Gig status updated successfully");
+        // console.log("Gig status updated successfully");
       } else {
         const errorText = await res.text();
         console.error("Failed to update gig status:", errorText);
@@ -506,7 +511,7 @@ export function Dashboard() {
                       — {gig.postedBy?.name || "Unknown"} from {gig.postedBy?.company || "—"} ({gig.budget}$)
                     </span>
 
-                    {alreadyApplied ? (
+                    {alreadyApplied || gigApplied? (
                       <button
                         disabled
                         className="ml-4 px-3 py-1 bg-gray-500 text-green-500 rounded-lg text-sm cursor-not-allowed"

@@ -3,8 +3,19 @@ import { useUser } from "../context/UserContext.jsx";
 import { logoutUser } from "../api/logoutUser.js";
 
 export default function Layout() {
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const navigate = useNavigate();  
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (e) {
+      console.error("Logout failed:", e);
+    } finally {
+      setUser(null);      // update UI immediately
+      navigate("/login"); // optional redirect
+    }
+  };
 
   return (
     <div className="min-h-screen bg-neutral-950 text-gray-100 font-serif flex flex-col">
@@ -66,7 +77,7 @@ export default function Layout() {
                   Hi, {user.name}
                 </span>
                 <button
-                  onClick={logoutUser}
+                  onClick={handleLogout}
                   className="px-4 py-2 rounded-lg border border-neutral-700 text-gray-300 hover:bg-neutral-800 transition-all text-sm"
                 >
                   Logout

@@ -5,7 +5,7 @@ export async function fetchWithRefresh(url, options = {}) {
   const savedBody = options.body;
   const fullUrl = `${API_BASE}${url}`;
 
-  console.log("Making request to:", fullUrl);
+  // console.log("Making request to:", fullUrl);
 
   let response = await fetch(fullUrl, options);
 

@@ -2,12 +2,13 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { User } from "../models/User.models.js";
 import ApiError from "../utils/ApiError.js";
 import jwt from "jsonwebtoken"
+import {hashToken} from "../utils/token.js"
 
 
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
         const user = await User.findById(userId)
-        console.log("Generating tokens for user ID:", userId)
+        // console.log("Generating tokens for user ID:", userId)
         // console.log("Generating tokens for user:", user.email)
 
         if (!user) {
@@ -19,14 +20,19 @@ const generateAccessAndRefereshTokens = async (userId) => {
         const accessToken = user.generateAccessToken()
         const refreshToken = user.generateRefreshToken()
 
-        user.refreshToken = refreshToken
+
+        const newHash = hashToken(refreshToken)
+        user.refreshTokens = user.refreshTokens || []
+
+        user.refreshTokens.push({ tokenHash: newHash, createdAt: new Date() })
+
         await user.save({ validateBeforeSave: false })
 
         return { accessToken, refreshToken }
 
 
     } catch (error) {
-        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+        throw new ApiError(500, "Something went wrong while generating referesh and access token", error)
     }
 }
 
@@ -36,7 +42,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const { name, email: rawEmail, password, role } = req.body
     const email = req.body.email.trim().toLowerCase();
 
-    console.log("Registering user mail:", { email })
+    // console.log("Registering user mail:", { email })
 
     if (
         [name, email, password, role].some((field) => field?.trim() === "")
@@ -80,11 +86,10 @@ const loginUser = asyncHandler(async (req, res) => {
     // check if user exists
     // check if password is correct
     // generate access and refresh token
-    // send cookie and response
-
+    // send cookie and response    
     const { email: rawEmail, password } = req.body
     const email = (rawEmail || "").trim().toLowerCase();
-    console.log("Logging in user mail:", { email })
+    // console.log("Logging in user mail:", { email })
 
     if (!email || !password) {
         throw new ApiError(400, "Both fields are important")
@@ -94,9 +99,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     if (!user) {
         throw new ApiError(400, "User doesnot exist with this mail")
-    }
-
-    console.log(password)
+    }    
 
     const isPasswordValid = await user.isPasswordCorrect(password)
 
@@ -107,7 +110,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
 
     const loggedInUser = await User.findById(user._id).select(
-        "-password -refreshToken"
+        "-password -refreshTokens"
     )
 
     res.
@@ -133,17 +136,17 @@ const loginUser = asyncHandler(async (req, res) => {
 })
 
 const logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $unset: {
-                refreshToken: 1 // this removes the field from document
+    // remove current refresh token only
+    const incomingRefreshToken = req.cookies?.refreshToken;
+    if (incomingRefreshToken) {
+        const tokenHash = hashToken(incomingRefreshToken);
+        await User.findByIdAndUpdate(
+            req.user._id, 
+            {
+                $pull: { refreshTokens: { tokenHash } },
             }
-        },
-        {
-            new: true
-        }
-    )
+        );
+    }
 
     const options = {
         httpOnly: true,
@@ -173,7 +176,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken;
 
     if (!incomingRefreshToken) {
-        throw new ApiError(401, "unauthorized request")
+        throw   new ApiError(401, "unauthorized request")
     }
 
     try {
@@ -188,10 +191,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Invalid refresh token")
         }
 
-        if (incomingRefreshToken !== user?.refreshToken) {
-            throw new ApiError(401, "Refresh token is expired or used")
+        const found = (user.refreshTokens || []).find((t) => t.tokenHash === incomingHash);
 
+        if (!found) {
+            // refresh token reuse detected — revoke all sessions
+            user.refreshTokens = [];
+            await user.save({ validateBeforeSave: false });
+            throw new ApiError(401, "Refresh token reuse detected. All sessions revoked.");
         }
+
+        // rotate: remove used token, issue a new one and store its hash
+        user.refreshTokens = user.refreshTokens.filter((t) => t.tokenHash !== incomingHash);
 
         const options = {
             httpOnly: true,
@@ -201,6 +211,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         // ->generating new tokens
         const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefereshTokens(user._id)
+
+        const newHash = hashToken(newRefreshToken);
+        user.refreshTokens.push({ tokenHash: newHash, createdAt: new Date() });
 
         return res
             .status(200)
