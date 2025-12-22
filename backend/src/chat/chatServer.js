@@ -68,6 +68,7 @@ export default function startChatServer(httpServer) {
   // });
 
   io.use(async (socket, next) => {
+    console.log("Socket Middleware called")
     try {
       const token = socket.handshake.auth?.token;
       if (!token) {
@@ -92,7 +93,7 @@ export default function startChatServer(httpServer) {
      🔌 SOCKET CONNECTION
      =============================== */
   io.on("connection", (socket) => {
-    // console.log("⚡ User connected:", socket.user._id.toString());
+    console.log("⚡ User connected:", socket.user._id.toString());
 
     socket.on("join-room", ({ roomId }) => {
       if (!roomId) return;

@@ -28,9 +28,8 @@ export async function fetchWithRefresh(url, options = {}) {
       console.log("Token refreshed successfully");
 
       // add to localstorage for socket
-      const data = refreshRes.json()      
-      if(data.accessToken) {
-        localStorage.removeItem("accessToken");
+      const data = await refreshRes.json()      
+      if(data.accessToken) {        
         localStorage.setItem("accessToken", data.accessToken);
       }
 

@@ -69,15 +69,21 @@ function Chat() {
 
   // create chatroom connection
   useEffect(() => {
+    console.log("chat room conn")
     if (!chatRoomId) return;
 
     // derive backend origin from API_BASE (strip "/api/v1")
     const backendOrigin = API_BASE.replace(/\/api\/v1\/?$/i, "");
-    // console.log("Connecting to chat server at:", backendOrigin);
+    console.log("Connecting to chat server at:", backendOrigin);
+
+    const token = localStorage.getItem("accessToken")
+    if(!token){
+      console.log("No token in local storage for socket auth")
+    }
 
     const socket = io(backendOrigin, {
       auth: {
-        token: localStorage.getItem("accessToken"),
+        token: token
       },
       transports: ["websocket"],
     });
