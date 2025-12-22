@@ -18,6 +18,7 @@ export async function loginUser(credentials) {
     }
     else{
         // for socket auth
+        console.log(data)
         localStorage.setItem("accessToken", data.accessToken);
     }
     return JSON.parse(text);
