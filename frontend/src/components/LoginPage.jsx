@@ -1,10 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../api/loginUser.js";
 import { useUser } from "../context/UserContext.jsx";
+import { useState } from "react";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const {setUser} = useUser();
+  const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -12,6 +14,7 @@ export default function LoginPage() {
     const data = Object.fromEntries(formData.entries());
 
     try {
+      setLoading(true)
       const resdata = await loginUser(data);               
       // console.log("Login successful:", resdata);
       setUser(resdata.user)
@@ -19,6 +22,8 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Login failed:', error);
       // show UI error
+    } finally {
+      setLoading(false); // stop loading
     }
   }
 
@@ -44,11 +49,41 @@ export default function LoginPage() {
             />
             <button
               type="submit"
-              className="w-full bg-black! text-white! py-2 px-4 rounded hover:bg-gray-800 transition-colors"
+              disabled={loading}
+              className={`w-full py-2 px-4 rounded transition-colors ${
+                loading
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
             >
-              Login
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
+                    ></path>
+                  </svg>
+                  Logging in...
+                </span>
+              ) : (
+                "Login"
+              )}
             </button>
-
         </form>
     </div>
   )

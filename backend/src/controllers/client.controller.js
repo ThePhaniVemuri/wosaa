@@ -233,7 +233,7 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
     const session = await client.checkoutSessions.create({
       product_cart: [
         {
-          product_id: process.env,PRODUCT_ID,
+          product_id: process.env.PRODUCT_ID,
           quantity: 1,
           amount: amountInCents,
         },

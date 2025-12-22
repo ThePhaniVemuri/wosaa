@@ -1,10 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { registerUserAsFreelancer } from "../api/registerUserAsFreelancer";
+import { useState } from "react";
 
 export default function FreelancerRegisterPage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e) => {
+    setLoading(true)
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
@@ -29,13 +32,14 @@ export default function FreelancerRegisterPage() {
       earnings: Number(data.earnings) || 0,
     };
 
-    // console.log("Submitting:", payload);
+    // console.log("Submitting:", payload);    
     const result = await registerUserAsFreelancer(payload);
     
     // console.log("Freelancer registration result:", result); 
 
     if (result.success) {
-      navigate('/dashboard');      
+      navigate('/dashboard');            
+      setLoading(false)
     }else{
         console.error("Freelancer registration or navigation failed.");
     }
@@ -126,11 +130,42 @@ export default function FreelancerRegisterPage() {
 
         {/* Submit */}
         <button
-          type="submit"
-          className="w-full px-4 py-3 bg-white! text-black! rounded-lg font-medium hover:opacity-95"
-        >
-          Complete Registration
-        </button>
+              type="submit"
+              disabled={loading}
+              className={`w-full py-2 px-4 rounded transition-colors ${
+                loading
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z"
+                    ></path>
+                  </svg>
+                  Registering as Freelancer
+                </span>
+              ) : (
+                "Register"
+              )}
+            </button>
       </form>
     </div>
   );
