@@ -80,6 +80,7 @@ function Chat() {
     if(!token){
       console.log("No token in local storage for socket auth")
     }
+    console.log(token)
 
     const socket = io(backendOrigin, {
       auth: {

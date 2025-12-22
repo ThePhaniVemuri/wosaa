@@ -74,8 +74,10 @@ export default function startChatServer(httpServer) {
       if (!token) {
         return next(new Error("Access token missing"));
       }
+      console.log("token is there", token)
 
       const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      console.log("decoded the token")
       const user = await User.findById(decoded._id).select("-password");
 
       if (!user) {
