@@ -23,9 +23,16 @@ export async function fetchWithRefresh(url, options = {}) {
       if (!refreshRes.ok) {
         console.error(`Refresh failed: ${refreshRes.status}`);
         throw new Error(`Refresh failed: ${refreshRes.status}`);
-      }
+      }      
 
       console.log("Token refreshed successfully");
+
+      // add to localstorage for socket
+      const data = refreshRes.json()      
+      if(data.accessToken) {
+        localStorage.removeItem("accessToken");
+        localStorage.setItem("accessToken", data.accessToken);
+      }
 
       // Retry original request with fresh token
       options.body = savedBody;

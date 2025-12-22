@@ -222,7 +222,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             .json(
                 {
                     success: true,
-                    message: "Access token refreshed"                    
+                    message: "Access token refreshed",
+                    accessToken                  
                 }
             )
     } catch (error) {

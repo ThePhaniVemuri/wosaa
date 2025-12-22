@@ -9,6 +9,7 @@ export async function loginUser(credentials) {
     });
 
     const text = await res.text();    
+    const data = await res.json();
 
     if (!res.ok) {
         let msg = text;
@@ -17,7 +18,7 @@ export async function loginUser(credentials) {
     }
     else{
         // for socket auth
-        localStorage.setItem("accessToken", res.accessToken);
+        localStorage.setItem("accessToken", data.accessToken);
     }
     return JSON.parse(text);
 }
