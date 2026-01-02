@@ -134,8 +134,8 @@ export default function FreelancerRegisterPage() {
               disabled={loading}
               className={`w-full py-2 px-4 rounded transition-colors ${
                 loading
-                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                  : "bg-black text-white hover:bg-gray-800"
+                  ? "bg-gray-400! text-gray-200! cursor-not-allowed"
+                  : "bg-black! text-white! hover:bg-gray-800"
               }`}
             >
               {loading ? (
