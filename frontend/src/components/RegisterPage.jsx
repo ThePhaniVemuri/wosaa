@@ -58,29 +58,47 @@ export default function RegisterPage() {
 
             <div className="flex gap-3">
                 <label className="flex-1 cursor-pointer">
-                <input
+                    <input
                     type="radio"
                     name="role"
                     value="freelancer"
                     className="peer hidden"
-                />
-                <div className="text-center py-2 border border-neutral-700 rounded bg-neutral-800 peer-checked:border-white">
+                    />
+
+                    <div className="
+                    text-center py-2
+                    border border-neutral-700
+                    rounded bg-neutral-800
+                    transition-all duration-200
+                    peer-checked:border-blue-600!
+                    peer-checked:ring-1
+                    peer-checked:ring-blue-600!
+                    ">
                     Freelancer
-                </div>
+                    </div>
                 </label>
 
                 <label className="flex-1 cursor-pointer">
-                <input
+                    <input
                     type="radio"
                     name="role"
                     value="client"
                     className="peer hidden"
-                />
-                <div className="text-center py-2 border border-neutral-700 rounded bg-neutral-800 peer-checked:border-white">
+                    />
+
+                    <div className="
+                    text-center py-2
+                    border border-neutral-700
+                    rounded bg-neutral-800
+                    transition-all duration-200
+                    peer-checked:border-blue-600!
+                    peer-checked:ring-1
+                    peer-checked:ring-blue-600!
+                    ">
                     Client
-                </div>
+                    </div>
                 </label>
-            </div>            
+                </div>         
 
             <button
                 type="submit"

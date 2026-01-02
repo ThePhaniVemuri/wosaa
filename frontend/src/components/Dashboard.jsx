@@ -9,14 +9,22 @@ import { useUser } from "../context/UserContext.jsx";
 
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const {user, setUser} = useUser()
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login")
+    }
+  }, [user, navigate])
+
+  if (!user) return null
 
   const [gigsByClient, setGigsByClient] = useState([]);
   const [gigs, setGigs] = useState([]);
   const [isApplying, setIsApplying] = useState(false);
   const [gigApplied, setGigApplied] = useState(false)
   const [gigsInWork, setGigsInWork] = useState([]);
-  const navigate = useNavigate();
 
   // bid for gig variables
   const [openGigId, setOpenGigId] = useState(null);

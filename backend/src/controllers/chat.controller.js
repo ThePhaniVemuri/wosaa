@@ -4,14 +4,14 @@ import { Message } from "../models/Message.models.js";
 const chatRoomLogic = async (req, res) => {
     try {
         const { clientId, freelancerId, gigId } = req.body;   
-        console.log("Received chat room request with:", { clientId, freelancerId, gigId });     
+        // console.log("Received chat room request with:", { clientId, freelancerId, gigId });     
         const chatRoom = await ChatRoom.findOne({ clientId, freelancerId, gigId });
-        console.log("Found chat room:", chatRoom);
+        // console.log("Found chat room:", chatRoom);
 
         if (!chatRoom) {    
             const chatRoom = new ChatRoom({ clientId, freelancerId, gigId });
             await chatRoom.save();
-            console.log("Created new chat room:", chatRoom);
+            // console.log("Created new chat room:", chatRoom);
 
             const messages = [];
 
