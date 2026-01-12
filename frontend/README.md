@@ -1,16 +1,36 @@
-# React + Vite
+# Wosaa
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Wosaa is a full‑stack freelance marketplace (React + Vite frontend, Node/Express backend, MongoDB) connecting clients and freelancers with gigs, chat, contracts, and payments.
 
-Currently, two official plugins are available:
+## Features
+- Role-based auth for clients and freelancers
+- Post, browse, and apply to gigs
+- Realtime chat (WebSockets)
+- Contracts and payments workflow
+- Webhook handlers and email utilities
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Repo Layout (high level)
+- `backend/` — Express API, controllers, routes, models, middleware, utils, webhooks
+- `frontend/` — Vite + React app, Tailwindcss, components, API helpers, socket service, context
 
-## React Compiler
+## Prerequisites
+- Node.js v16+ (or latest LTS)
+- npm or yarn
+- MongoDB (Atlas or local)
+- Optional: SMTP credentials for email integrations, any payment provider credentials used by the backend
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Environment (example)
+Create a `.env` in `backend/` with values similar to the example below.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```env
+# backend/.env.example
+MONGO_URI=mongodb+srv://<user>:<pass>@cluster0.mongodb.net/wosaa?retryWrites=true&w=majority
+JWT_SECRET=your_jwt_secret_here
+PORT=5000
+CLIENT_URL=http://localhost:5173
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USER=your@email.com
+EMAIL_PASS=your_email_password
+# Add any webhook or payment provider keys here
+```
