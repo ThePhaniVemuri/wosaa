@@ -2,6 +2,8 @@
 
 Wosaa is a full‑stack freelance marketplace (React + Vite frontend, Node/Express backend, MongoDB) connecting clients and freelancers with gigs, chat, contracts, and payments.
 
+live at: https://wosaa.vercel.app/
+
 ## Features
 - Role-based auth for clients and freelancers
 - Post, browse, and apply to gigs

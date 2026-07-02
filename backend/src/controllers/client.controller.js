@@ -8,6 +8,7 @@ import { generateAccessAndRefereshTokens } from "./user.controller.js";
 import { Contract } from "../models/Contract.models.js";
 import DodoPayments from 'dodopayments';
 import sendMail from "../utils/email.js"
+import { reviewGigSubmission } from "../../services/AIservice.js";
 
 const registerClient = asyncHandler(async (req, res) => {
   const { user, name, company, country } = req.body;
@@ -60,18 +61,33 @@ const registerClient = asyncHandler(async (req, res) => {
 
 const postGig = asyncHandler(async (req, res, next) => {
     const { title, description, category, budget, deliveryTimeInDays, skillsRequired, attachments } = req.body;
-    // console.log(req.body)
-    const userId = req.user._id; 
-    // console.log(userId) 
+    const userId = req.user._id;
 
-    // Find the client associated with the user
     const client = await Client.findOne({ userId: userId });
 
     if (!client) {
         throw new ApiError(404, "Client profile not found for the user");
     }
 
-    // Create a new gig
+    const review = await reviewGigSubmission({
+        title,
+        description,
+        category,
+        budget,
+        deliveryTimeInDays,
+        skillsRequired,
+        attachments,
+    });
+
+    if (!review?.accepted) {
+        return res.status(400).json({
+            success: false,
+            message: review?.message || "Gig needs changes before it can be posted.",
+            review,
+            error: "Gig review rejected",
+        });
+    }
+
     const gig = await Gig.create({
         postedBy: client._id,
         title,
@@ -89,6 +105,7 @@ const postGig = asyncHandler(async (req, res, next) => {
         success: true,
         message: "Gig posted successfully",
         gig,
+        review,
     });
 });
 

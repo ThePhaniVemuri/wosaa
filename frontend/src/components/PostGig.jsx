@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { postGig } from "../api/postGig";
+import { postGig, reviewGig } from "../api/postGig";
 
 export default function PostGig() {
   const [title, setTitle] = useState("");
@@ -11,6 +11,10 @@ export default function PostGig() {
   const [skillsRequired, setSkillsRequired] = useState([]);
   const [skillInput, setSkillInput] = useState("");
   const [attachments, setAttachments] = useState([]);
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewStatus, setReviewStatus] = useState("idle");
+  const [reviewSuggestions, setReviewSuggestions] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
 
@@ -54,15 +58,25 @@ export default function PostGig() {
       budget: Number(budget),
       deliveryTimeInDays: Number(deliveryTimeInDays),
       skillsRequired,
-      // attachments will not be uploaded in this simple example.
+      attachments,
     };
-    // console.log("Submitting gig:", payload);
+
+    setIsSubmitting(true);
+    setReviewMessage("");
+    setReviewSuggestions([]);
+    setReviewStatus("loading");
 
     try {
+      const reviewResponse = await reviewGig(payload);
+      if (!reviewResponse?.success || !reviewResponse?.review?.accepted) {
+        setReviewStatus("rejected");
+        setReviewMessage(reviewResponse?.review?.message || reviewResponse?.message || "This gig needs a few changes before it can be posted.");
+        setReviewSuggestions(reviewResponse?.review?.suggestedChanges || []);
+        return;
+      }
+
       const resp = await postGig(payload);
-      // console.log("Post gig response:", resp);
-      if (resp?.success) {        
-        // reset form
+      if (resp?.success) {
         setTitle("");
         setDescription("");
         setCategory("");
@@ -71,14 +85,20 @@ export default function PostGig() {
         setSkillsRequired([]);
         setSkillInput("");
         setAttachments([]);
-        // Navigate to dashboard
-        navigate('/dashboard')
+        setReviewStatus("accepted");
+        setReviewMessage(resp.review?.message || "Gig approved and posted successfully.");
+        navigate('/dashboard');
       } else {
-        alert("Failed to create gig: " + (resp.error || "Unknown error"));
+        setReviewStatus("rejected");
+        setReviewMessage(resp?.message || resp?.error || "Failed to create gig");
+        setReviewSuggestions(resp?.review?.suggestedChanges || []);
       }
     } catch (err) {
       console.error("Error posting gig:", err);
-      alert("Error posting gig: " + (err.message || err));
+      setReviewStatus("rejected");
+      setReviewMessage(err.message || "Error posting gig");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -182,8 +202,21 @@ export default function PostGig() {
           className="w-full mb-4 px-3 py-2 border border-gray-200 rounded bg-white text-gray-900 focus:outline-none focus:ring-0"
         />
 
-        <button type="submit" className={buttonClass}>
-          Create Gig
+        {reviewMessage ? (
+          <div className={`mb-4 rounded border p-3 text-sm ${reviewStatus === "accepted" ? "border-green-300 bg-green-50 text-green-700" : "border-amber-300 bg-amber-50 text-amber-700"}`}>
+            <p className="font-medium">{reviewMessage}</p>
+            {reviewSuggestions.length > 0 && (
+              <ul className="mt-2 list-disc pl-5">
+                {reviewSuggestions.map((suggestion) => (
+                  <li key={suggestion}>{suggestion}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : null}
+
+        <button type="submit" className={buttonClass} disabled={isSubmitting}>
+          {isSubmitting ? "Checking gig..." : "Create Gig"}
         </button>
       </form>
     </div>

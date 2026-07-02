@@ -8,6 +8,7 @@ import {
   createContract,
   setGigStatus
 } from "../controllers/client.controller.js";
+import { reviewGigForApproval } from "../controllers/ai.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { verifyRole } from "../middleware/roleBasedAuth.middleware.js";
 
@@ -26,6 +27,7 @@ router.get("/me", verifyJWT, async (req, res, next) => {
   }
 });
 
+router.post("/review-gig", verifyJWT, verifyRole(["client"]), reviewGigForApproval);
 router.post("/post-gig", verifyJWT, verifyRole(["client"]), postGig);
 router.get("/posted-gigs", verifyJWT, verifyRole(["client"]), postedGigsByClient);
 router.post("/hire-freelancer", verifyJWT, verifyRole(["client"]), hireFreelancer);

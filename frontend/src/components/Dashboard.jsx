@@ -297,61 +297,77 @@ export function Dashboard() {
             <h2 className="text-3xl font-semibold mb-3 text-gray-100">Client Dashboard</h2>
             <p className="text-gray-400 mb-6">Manage your gigs and view applications.</p>
 
-            <ul className="space-y-3 mb-6">
+<ul className="space-y-4 mb-6">
               {gigsByClient.map((gig) => (
-                <li key={gig._id} className="bg-neutral-800 hover:bg-neutral-700 transition-all p-4 rounded-xl text-gray-200">
-                  {gig.title}
-                  <ul className="mt-2 ml-4 list-disc list-inside">
+                <li key={gig._id} className="bg-neutral-800/90 border border-neutral-700 rounded-2xl p-5 shadow-sm">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="text-xl text-white">{gig.title}</h3>
+                        <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs uppercase tracking-wide text-blue-300">
+                          {gig.status || "open"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                        <span className="rounded-full bg-neutral-700/70 px-3 py-1">
+                          Budget: <span className="ml-1 font-semibold text-amber-300">${gig.budget || 0}</span>
+                        </span>
+                        <span className="rounded-full bg-neutral-700/70 px-3 py-1">
+                          Delivery: <span className="ml-1 font-semibold text-gray-200">{gig.deliveryTimeInDays || "—"} days</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 self-start rounded-full border border-neutral-700 bg-neutral-900/80 px-3 py-2 text-sm text-gray-300">
+                      <span className="text-xs uppercase tracking-[0.2em] text-gray-500">Task</span>
+                      <select
+                        value={gig.status || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+
+                          if (value === "completed") {
+                            setSelectedGigIdForTask(gig._id);
+                            setTaskcompleteConfirmationModel(true);
+                          } else {
+                            setAndGetGigStatus(gig._id, value);
+                          }
+                        }}
+                        className="bg-transparent text-sm text-gray-100 outline-none"
+                      >
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="closed">Closed</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <ul className="mt-4 space-y-3">
                     {gig.hiredFreelancer ? (
-                      <li className="text-green-400 text-sm italic">
-                        Freelancer hired – {gig.hiredFreelancer.name} ({gig.hiredFreelancer.email})
-                        <button
-                          className="ml-4 px-2 py-1 bg-gray-900! text-white rounded-lg text-xs cursor-not-allowed"
-                          onClick={() => handleChatButtonClick(user._id, gig.hiredFreelancer._id, gig._id, gig.title)}
-                        >
-                          Chat with Freelancer
-                        </button>
-                        <div>
-                        Current Status of Gig: <span className="font-semibold text-blue-400">{gig.status}</span>                                                
-                      </div>
-                      {/* set the status of task */}                      
-                      <div className="items-center mt-4">
-                        <h4 className="text-sm font-semibold text-gray-200">
-                          set task status
-                        </h4>
-
-                        <select
-                          value={ gig.status || ""}
-                          onChange={(e) => {
-                            const value = e.target.value;
-
-                            if (value === "completed") {
-                              setSelectedGigIdForTask(gig._id);
-                              setTaskcompleteConfirmationModel(true);
-                            } else {
-                              setAndGetGigStatus(gig._id, value);
-                            }
-                          }}
-                          className="mt-2 w-48 bg-neutral-800 text-gray-200 border border-neutral-700 rounded-md px-3 py-2"
-                        >
-                          <option value="in_progress">In Progress</option>
-                          <option value="completed">Completed</option>
-                          <option value="closed">Closed</option>
-                        </select>
-                      </div>
-                                               
+                      <li className="rounded-xl border border-emerald-800/40 bg-emerald-950/20 p-4 text-sm text-emerald-200">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <p className="font-semibold text-emerald-100">Freelancer hired</p>
+                            <p>{gig.hiredFreelancer.name} ({gig.hiredFreelancer.email})</p>
+                          </div>
+                          <button
+                            className="rounded-lg bg-neutral-900 px-3 py-2 text-sm text-white transition hover:bg-neutral-700"
+                            onClick={() => handleChatButtonClick(user._id, gig.hiredFreelancer._id, gig._id, gig.title)}
+                          >
+                            Chat with Freelancer
+                          </button>
+                        </div>
                       </li>
                     ) : (
                       <>
                         {gig.applicants && gig.applicants.length > 0 ? (
                           gig.applicants.map((applicant, idx) => (
-                            <li key={idx} className="text-gray-400 text-sm">
-                              {(applicant.freelancerId?.name) || (applicant.freelancerId) || "Unknown"}
-                              {" "}
-                              ({applicant.freelancerId?.email || "—"})                              
-                              - Bid: ₹{applicant.bidAmount}
-                              - Note: {applicant.note}
-                              {/* render Hire button only when we have a freelancer id/object */}
+                            <li key={idx} className="flex flex-col gap-3 rounded-xl border border-neutral-700 bg-neutral-900/70 p-4 md:flex-row md:items-center md:justify-between">
+                              <div className="min-w-0">
+                                <p className="font-medium text-gray-100">{(applicant.freelancerId?.name) || (applicant.freelancerId) || "Unknown"}</p>
+                                <p className="text-sm text-gray-400">{applicant.freelancerId?.email || "—"}</p>
+                                <p className="mt-2 text-sm text-gray-400">Bid: <span className="font-semibold text-amber-300">₹{applicant.bidAmount}</span></p>
+                                {applicant.note ? <p className="mt-1 text-sm text-gray-500">Note: {applicant.note}</p> : null}
+                              </div>
                               {applicant.freelancerId ? (
                                 <button
                                   onClick={() => {
@@ -361,17 +377,17 @@ export function Dashboard() {
                                     setSelectedFreelancerName(applicant.freelancerId?.name || "Unknown");
                                     setShowHireModal(true);
                                   }}
-                                  className="ml-4 px-2 py-1 bg-gray-900! text-white rounded-lg text-xs hover:bg-gray-700"
+                                  className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
                                 >
                                   Hire this freelancer
                                 </button>
                               ) : (
-                                <span className="ml-4 text-yellow-300 text-xs">No freelancer data</span>
+                                <span className="text-sm text-yellow-300">No freelancer data</span>
                               )}
                             </li>
                           ))
                         ) : (
-                          <li className="text-gray-500 text-sm italic">No applicants yet</li>
+                          <li className="rounded-xl border border-dashed border-neutral-700 p-4 text-sm italic text-gray-500">No applicants yet</li>
                         )}
                       </>
                     )}
@@ -465,27 +481,32 @@ export function Dashboard() {
             <p className="text-gray-400 mb-6">View and apply to gigs.</p>
             <div className="mb-8">
               {gigsInWork && gigsInWork.length > 0 ? (
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {gigsInWork.map((gig) => (
-                    <li key={gig._id || gig.id} className="bg-neutral-800 hover:bg-neutral-700 transition-all p-4 rounded-xl text-gray-200">
-                      {gig.title}{" "}
-                      {gig.description && (
-                        <p className="text-gray-400 text-sm mt-1">{gig.description}</p>
-                      )}
-                      <span className="text-gray-500 text-sm">
-                        — {gig.postedBy?.name || "Unknown"} from {gig.postedBy?.company || "—"} ({gig.postedBy?.country || "—"})
-                      </span>
+                    <li key={gig._id || gig.id} className="rounded-2xl border border-neutral-700 bg-neutral-800/90 p-5 text-gray-200">
+                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="min-w-0">
+                          <h3 className="text-lg text-white">{gig.title}</h3>
+                          {gig.description && (
+                            <p className="mt-2 text-sm text-gray-400">{gig.description}</p>
+                          )}
+                          <p className="mt-3 text-sm text-gray-500">
+                            {gig.postedBy?.name || "Unknown"} • {gig.postedBy?.company || "—"} • {gig.postedBy?.country || "—"}
+                          </p>
+                        </div>
 
-                      <span className="block text-gray-400 text-sm mt-1">
-                        Budget: ({gig.budget}$)
-                      </span>
-
-                      <button 
-                        className="ml-4 px-2 py-1 bg-gray-900! text-white rounded-lg text-xs cursor-not-allowed"
-                        onClick={() => handleChatButtonClick(gig.postedBy?.userId, user._id, gig._id, gig.title)}                             
-                      >
-                        Chat with Client                      
-                      </button>                      
+                        <div className="flex flex-col items-start gap-3 md:items-end">
+                          <span className="rounded-full bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-300">
+                            Budget: ${gig.budget || 0}
+                          </span>
+                          <button
+                            className="rounded-lg bg-neutral-900 px-3 py-2 text-sm text-white transition hover:bg-neutral-700"
+                            onClick={() => handleChatButtonClick(gig.postedBy?.userId, user._id, gig._id, gig.title)}
+                          >
+                            Chat with Client
+                          </button>
+                        </div>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -500,7 +521,7 @@ export function Dashboard() {
           <h2 className="text-3xl font-semibold mb-3 text-gray-100">Available Gigs</h2>
           <p className="text-gray-400 mb-6">Browse and apply to new gigs.</p>
           {gigs && gigs.length > 0 ? (
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               {gigs.map((gig) => {
                 const alreadyApplied = gig.applicants?.some(applicant =>
                   applicantMatchesUser(applicant, user?._id)
@@ -509,70 +530,80 @@ export function Dashboard() {
                 return gig.hiredFreelancer ? null : (
                   <li
                     key={gig._id || gig.id}
-                    className="bg-neutral-800 hover:bg-neutral-700 transition-all p-4 rounded-xl text-gray-200"
+                    className="rounded-2xl border border-neutral-700 bg-neutral-800/90 p-5 text-gray-200"
                   >
-                    {gig.title}{" "}
-                    {gig.description && (
-                      <p className="text-gray-400 text-sm mt-1">{gig.description}</p>
-                    )}
-                    <span className="text-gray-500 text-sm">
-                      — {gig.postedBy?.name || "Unknown"} from company: {gig.postedBy?.company || "—"} Budget: ({gig.budget}$)
-                    </span>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0">
+                        <h3 className="text-lg text-white">{gig.title}</h3>
+                        {gig.description && (
+                          <p className="mt-2 text-sm text-gray-400">{gig.description}</p>
+                        )}
+                        <p className="mt-3 text-sm text-gray-500">
+                          {gig.postedBy?.name || "Unknown"} • {gig.postedBy?.company || "—"}
+                        </p>
+                      </div>
 
-                    {alreadyApplied ? (
-                      <button
-                        disabled
-                        className="ml-4 px-3 py-1 bg-gray-500 text-green-500 rounded-lg text-sm cursor-not-allowed"
-                      >
-                        Applied
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setOpenGigId(gig._id)}
-                        className="ml-4 px-3 py-1 bg-white text-black rounded-lg text-sm hover:bg-gray-200 transition-all"
-                      >
-                        Get the gig
-                      </button>
-                    )}
+                      <div className="flex flex-col items-start gap-3 md:items-end">
+                        <span className="rounded-full bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-300">
+                          Budget: ${gig.budget || 0}
+                        </span>
+
+                        {alreadyApplied ? (
+                          <button
+                            disabled
+                            className="rounded-lg bg-neutral-700 px-3 py-2 text-sm text-emerald-300 cursor-not-allowed"
+                          >
+                            Applied
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setOpenGigId(gig._id)}
+                            className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-gray-200"
+                          >
+                            Get the gig
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
                     {openGigId === gig._id && (
-                      <div className="mt-4 bg-neutral-700 p-4 rounded-lg">
-                        <label className="block text-gray-300 text-sm mb-2">
+                      <div className="mt-4 rounded-xl border border-neutral-700 bg-neutral-900/80 p-4">
+                        <label className="mb-2 block text-sm text-gray-300">
                           Bid Amount (₹)
                         </label>
                         <input
                           type="number"
                           value={bidAmount}
                           onChange={(e) => setBidAmount(e.target.value)}
-                          className="w-full px-3 py-2 rounded-md bg-neutral-800 text-gray-100 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                          className="mb-3 w-full rounded-md border border-neutral-600 bg-neutral-800 px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
 
-                        <label className="block text-gray-300 text-sm mb-2">
+                        <label className="mb-2 block text-sm text-gray-300">
                           Why you?
                         </label>
                         <textarea
                           value={note}
                           onChange={(e) => setNote(e.target.value)}
                           rows={3}
-                          className="w-full px-3 py-2 rounded-md bg-neutral-800 text-gray-100 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                          className="mb-3 w-full rounded-md border border-neutral-600 bg-neutral-800 px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
 
-                        <div className="flex gap-3">
+                        <div className="flex flex-wrap gap-3">
                           <button
                             onClick={() => {
-                              applyToGigg(gig._id, bidAmount, note); 
+                              applyToGigg(gig._id, bidAmount, note);
                               console.log(bidAmount, note)
                               setOpenGigId(null);
                               setBidAmount("");
                               setNote("");
                             }}
-                            className="px-4 py-2 bg-green-600! text-white rounded hover:bg-green-700"
+                            className="rounded bg-green-600 px-4 py-2 text-white transition hover:bg-green-700"
                           >
                             Submit
                           </button>
                           <button
                             onClick={() => setOpenGigId(null)}
-                            className="px-4 py-2 bg-red-600! text-white rounded hover:bg-red-700"
+                            className="rounded bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
                           >
                             Cancel
                           </button>

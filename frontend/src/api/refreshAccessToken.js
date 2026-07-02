@@ -1,11 +1,15 @@
 import { API_BASE } from "./config";
 
 export async function fetchWithRefresh(url, options = {}) {
-  options = { ...options, credentials: "include" }; // include cookies now no matter what
+  const token = localStorage.getItem("accessToken");
+  const headers = {
+    ...(options.headers || {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  options = { ...options, credentials: "include", headers };
   const savedBody = options.body;
   const fullUrl = `${API_BASE}${url}`;
-
-  // console.log("Making request to:", fullUrl);
 
   let response = await fetch(fullUrl, options);
 
